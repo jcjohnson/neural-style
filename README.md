@@ -22,6 +22,11 @@ Optional dependencies:
 * CUDA 6.5+
 * [cudnn.torch](https://github.com/soumith/cudnn.torch)
 
+After installing dependencies, you'll need to run the following script to download the VGG model:
+```
+sh models/download_models.sh
+```
+
 ## Usage
 Basic usage:
 ```
