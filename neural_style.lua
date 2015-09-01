@@ -8,37 +8,43 @@ require 'loadcaffe'
 --------------------------------------------------------------------------------
 
 local cmd = torch.CmdLine()
-cmd:option('-style_image', 'inputs/starry_night.jpg', 'Path to style target image')
-cmd:option('-content_image', 'inputs/lake.jpg',
-           'Path to content target image')
+
+-- Basic options
+cmd:option('-style_image', 'inputs/starry_night.jpg', 'Style target image')
+cmd:option('-content_image', 'inputs/lake.jpg', 'Content target image')
 cmd:option('-image_size', 512, 'Maximum height / width of generated image')
-cmd:option('-gpu', 0,
-  'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
-cmd:option('-output_image', 'out.png')
-cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
-cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
-cmd:option('-backend', 'nn', 'nn|cudnn')
+cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
+
+-- Optimization options
 cmd:option('-content_weight', 8.0)
 cmd:option('-style_weight', 1.0)
 cmd:option('-learning_rate', 10.0)
 cmd:option('-momentum', 0.9)
 cmd:option('-num_iterations', 500)
+
+-- Output options
 cmd:option('-print_iter', 50)
 cmd:option('-save_iter', 100)
+cmd:option('-output_image', 'out.png')
+
+-- Other options
+cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
+cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
+cmd:option('-backend', 'nn', 'nn|cudnn')
 
 
 local function main(params)
-  print(params)
   if params.gpu >= 0 then
     require 'cutorch'
     require 'cunn'
+    cutorch.setDevice(params.gpu + 1)
   end
 
   if params.backend == 'cudnn' then
     require 'cudnn'
   end
   
-  local cnn = loadcaffe.load(params.proto_file, params.model_file, params.backend)
+  local cnn = loadcaffe.load(params.proto_file, params.model_file, params.backend):float()
   if params.gpu >= 0 then
     cnn:cuda()
   end
@@ -60,7 +66,7 @@ local function main(params)
   local content_layers = {7}
   local style_layers = {2, 7, 12, 21}
   local style_layer_weights = {2e4, 1e2, 1e2, 1e1}
-  
+
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
   local next_content_idx, next_style_idx = 1, 1
@@ -70,7 +76,7 @@ local function main(params)
       net:add(cnn:get(i))
       if i == content_layers[next_content_idx] then
         local target = net:forward(content_image_caffe):clone()
-        local loss_module = nn.ContentLoss(params.content_weight, target)
+        local loss_module = nn.ContentLoss(params.content_weight, target):float()
         if params.gpu >= 0 then
           loss_module:cuda()
         end
@@ -79,12 +85,15 @@ local function main(params)
         next_content_idx = next_content_idx + 1
       end
       if i == style_layers[next_style_idx] then
-        local gram = GramMatrix():cuda()
+        local gram = GramMatrix():float()
+        if params.gpu >= 0 then
+          gram = gram:cuda()
+        end
         local target_features = net:forward(style_image_caffe):clone()
         local target = gram:forward(target_features)
         target:div(target_features:nElement())
         local weight = params.style_weight * style_layer_weights[next_style_idx]
-        local loss_module = nn.StyleLoss(weight, target)
+        local loss_module = nn.StyleLoss(weight, target):float()
         if params.gpu >= 0 then
           loss_module:cuda()
         end
@@ -127,24 +136,33 @@ local function main(params)
     learningRate = params.learning_rate,
     momentum = params.momentum,
   }
-  print(optim_state)
   for t = 1, params.num_iterations do
+    -- Take a step
     local x, losses = optim.sgd(feval, img, optim_state)
     assert(x == img)
-    local verbose = (t % params.print_iter == 0)
+
+    -- Maybe print the iteration number and losses
+    local verbose = (params.print_iter > 0 and t % params.print_iter == 0)
     if verbose then
       print(string.format('Iteration %d / %d', t, params.num_iterations))
       for i, loss_module in ipairs(content_losses) do
-        print(string.format('Content %d %f', i, loss_module.loss))
+        print(string.format('  Content %d loss: %f', i, loss_module.loss))
       end
       for i, loss_module in ipairs(style_losses) do
-        print(string.format('Style %d %f', i, loss_module.loss))
+        print(string.format('  Style %d loss: %f', i, loss_module.loss))
       end
     end
-    if t % params.save_iter == 0 or t == params.num_iterations then
+
+    -- Maybe save the intermediate output
+    local should_save = params.save_iter > 0 and t % params.save_iter == 0
+    should_save = should_save or t == params.num_iterations
+    if should_save then
       local disp = deprocess(img:double())
       disp = image.minmax{tensor=disp, min=0, max=1}
       local filename = build_filename(params.output_image, t)
+      if t == params.num_iterations then
+        filename = params.output_image
+      end
       image.save(filename, disp)
     end
   end
