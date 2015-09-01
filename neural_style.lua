@@ -18,8 +18,6 @@ cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu 
 -- Optimization options
 cmd:option('-content_weight', 0.1)
 cmd:option('-style_weight', 1.0)
-cmd:option('-learning_rate', 5.0)
-cmd:option('-momentum', 0.9)
 cmd:option('-num_iterations', 1000)
 
 -- Output options
@@ -63,9 +61,9 @@ local function main(params)
   end
   
   -- Hardcode these for now
-  local content_layers = {21}
+  local content_layers = {18}
   local style_layers = {2, 7, 12, 15, 21}
-  local style_layer_weights = {1e3, 1e2, 1e2, 1e1, 1e1}
+  local style_layer_weights = {1e1, 1e1, 1e1, 1e1, 1e1}
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
@@ -105,8 +103,8 @@ local function main(params)
   end
   
   -- Initialize the image
-  -- local img = torch.randn(content_image:size()):float()
-  local img = content_image_caffe:clone():float()
+  local img = torch.randn(content_image:size()):float()
+  -- local img = content_image_caffe:clone():float()
   if params.gpu >= 0 then
     img = img:cuda()
   end
@@ -131,18 +129,8 @@ local function main(params)
     end
     return loss, grad
   end
-  
-  -- Run optimization.
-  local optim_state = {
-    learningRate = params.learning_rate,
-    momentum = params.momentum,
-  }
-  for t = 1, params.num_iterations do
-    -- Take a step
-    local x, losses = optim.sgd(feval, img, optim_state)
-    assert(x == img)
 
-    -- Maybe print the iteration number and losses
+  local function maybe_print(t)
     local verbose = (params.print_iter > 0 and t % params.print_iter == 0)
     if verbose then
       print(string.format('Iteration %d / %d', t, params.num_iterations))
@@ -153,7 +141,9 @@ local function main(params)
         print(string.format('  Style %d loss: %f', i, loss_module.loss))
       end
     end
+  end
 
+  local function maybe_save(t)
     -- Maybe save the intermediate output
     local should_save = params.save_iter > 0 and t % params.save_iter == 0
     should_save = should_save or t == params.num_iterations
@@ -167,6 +157,31 @@ local function main(params)
       image.save(filename, disp)
     end
   end
+
+  local num_calls = 0
+  local function feval_lbfgs(x)
+    num_calls = num_calls + 1
+    net:forward(x)
+    local grad = net:backward(x, dy)
+    local loss = 0
+    for _, mod in ipairs(content_losses) do
+      loss = loss + mod.loss
+    end
+    for _, mod in ipairs(style_losses) do
+      loss = loss + mod.loss
+    end
+    maybe_print(num_calls)
+    maybe_save(num_calls)
+    return loss, grad:view(grad:nElement())
+  end
+
+  
+  -- Run optimization.
+  local optim_state = {
+    maxIter = params.num_iterations,
+  }
+  local img_flat = img:view(img:nElement())
+  local x, losses = optim.lbfgs(feval_lbfgs, img, optim_state)
 end
   
 
