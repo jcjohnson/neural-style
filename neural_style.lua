@@ -49,11 +49,11 @@ local function main(params)
     cnn:cuda()
   end
   
-  local content_image = image.load(params.content_image)
+  local content_image = grayscale_to_rgb(image.load(params.content_image))
   content_image = image.scale(content_image, params.image_size, 'bilinear')
   local content_image_caffe = preprocess(content_image):float()
   
-  local style_image = image.load(params.style_image)
+  local style_image = grayscale_to_rgb(image.load(params.style_image))
   style_image = image.scale(style_image, params.image_size, 'bilinear')
   local style_image_caffe = preprocess(style_image):float()
   
@@ -63,9 +63,9 @@ local function main(params)
   end
   
   -- Hardcode these for now
-  local content_layers = {7}
-  local style_layers = {2, 7, 12, 21}
-  local style_layer_weights = {2e4, 1e2, 1e2, 1e1}
+  local content_layers = {21}
+  local style_layers = {2, 7, 12, 15, 21}
+  local style_layer_weights = {1e3, 1e2, 1e2, 1e1, 1e1}
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
@@ -104,8 +104,9 @@ local function main(params)
     end
   end
   
-  -- Randomly initialize the image
-  local img = torch.randn(content_image:size()):float()
+  -- Initialize the image
+  -- local img = torch.randn(content_image:size()):float()
+  local img = content_image_caffe:clone():float()
   if params.gpu >= 0 then
     img = img:cuda()
   end
@@ -187,6 +188,16 @@ function preprocess(img)
   mean_pixel = mean_pixel:view(3, 1, 1):expandAs(img)
   img:add(-1, mean_pixel)
   return img
+end
+
+
+function grayscale_to_rgb(img)
+  local c, h, w = img:size(1), img:size(2), img:size(3)
+  if c == 1 then
+    return img:expand(3, h, w):contiguous()
+  else
+    return img
+  end
 end
 
 
