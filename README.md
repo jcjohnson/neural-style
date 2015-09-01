@@ -49,10 +49,10 @@ Options:
 * `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to -1.
 
 Optimization options:
-* `-content_weight`: How much to weight the content reconstruction term. Default is 8.0.
+* `-content_weight`: How much to weight the content reconstruction term. Default is 0.1
 * `-style_weight`: How much to weight the style reconstruction term. Default is 1.0.
-* `-num_iterations`: Default is 500.
-* `-learning_rate`: Default is 10.0.
+* `-num_iterations`: Default is 1000.
+* `-learning_rate`: Default is 5.0.
 * `-momentum`: Default is 0.9.
 
 Output options:
@@ -74,7 +74,7 @@ Most of the examples shown here were run for 2000 iterations, but with a bit of 
 give good results within 1000 iterations.
 
 ## Implementation details
-Images are initialized with white noise, and optimized using gradient descent with momentum.
+Images are initialized with the content image and optimized using gradient descent with momentum.
 
 We perform style reconstructions using the `conv1_1`, `conv2_1`, `conv3_1`, and `conv4_1` layers and content reconstructions using the `conv2_1` layer. The losses at the four style reconstruction layers are weighted using
 hand-tuned weights; these are probably not optimal but seem to give good results for a variety of images.
