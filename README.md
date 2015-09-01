@@ -8,9 +8,9 @@ convolutional neural networks. Here's an example that maps the artistic style of
 [The Starry Night](https://en.wikipedia.org/wiki/The_Starry_Night)
 onto a night-time photograph of the Stanford campus:
 
-<img src="http://cs.stanford.edu/people/jcjohns/neural_style/starry_night.jpg" height="240px">
-<img src="http://cs.stanford.edu/people/jcjohns/neural_style/hoovertowernight.jpg" height="240px">
-<img src="http://cs.stanford.edu/people/jcjohns/neural_style/starry_stanford_big.png" width="845px">
+<img src="http://cs.stanford.edu/people/jcjohns/neural_style/starry_night.jpg" height="233px">
+<img src="http://cs.stanford.edu/people/jcjohns/neural_style/hoovertowernight.jpg" height="233px">
+<img src="http://cs.stanford.edu/people/jcjohns/neural_style/starry_stanford_big.png" width="820px">
 
 ## Setup:
 
