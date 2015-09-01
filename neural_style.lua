@@ -16,9 +16,9 @@ cmd:option('-image_size', 512, 'Maximum height / width of generated image')
 cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
 
 -- Optimization options
-cmd:option('-content_weight', 8.0)
+cmd:option('-content_weight', 0.1)
 cmd:option('-style_weight', 1.0)
-cmd:option('-learning_rate', 10.0)
+cmd:option('-learning_rate', 5.0)
 cmd:option('-momentum', 0.9)
 cmd:option('-num_iterations', 1000)
 
