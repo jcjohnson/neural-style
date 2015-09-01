@@ -76,5 +76,5 @@ give good results within 1000 iterations.
 ## Implementation details
 Images are initialized with the content image and optimized using gradient descent with momentum.
 
-We perform style reconstructions using the `conv1_1`, `conv2_1`, `conv3_1`, and `conv4_1` layers and content reconstructions using the `conv2_1` layer. The losses at the four style reconstruction layers are weighted using
-hand-tuned weights; these are probably not optimal but seem to give good results for a variety of images.
+We perform style reconstructions using the `conv1_1`, `conv2_1`, `conv3_1`, `conv4_1`, and `conv5_1` layers
+and content reconstructions using the `conv2_1` layer. The losses at the five style reconstruction layers are weighted using hand-tuned weights; these are probably not optimal but seem to give good results for a variety of images.
