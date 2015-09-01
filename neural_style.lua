@@ -18,7 +18,7 @@ cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu 
 -- Optimization options
 cmd:option('-content_weight', 1.0)
 cmd:option('-style_weight', 10.0)
-cmd:option('-tv_weight', 0)
+cmd:option('-tv_weight', 0.0005)
 cmd:option('-num_iterations', 1000)
 cmd:option('-init', 'random', 'random|image')
 
@@ -65,9 +65,9 @@ local function main(params)
   end
   
   -- Hardcode these for now
-  local content_layers = {12}
-  local style_layers = {2, 7, 12, 15}
-  local style_layer_weights = {1e1, 1e1, 1e1, 1e1}
+  local content_layers = {21}
+  local style_layers = {2, 7, 12, 15, 21}
+  local style_layer_weights = {1e1, 1e1, 1e1, 1e1, 1e1}
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
