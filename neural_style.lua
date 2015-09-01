@@ -20,7 +20,7 @@ cmd:option('-content_weight', 8.0)
 cmd:option('-style_weight', 1.0)
 cmd:option('-learning_rate', 10.0)
 cmd:option('-momentum', 0.9)
-cmd:option('-num_iterations', 500)
+cmd:option('-num_iterations', 1000)
 
 -- Output options
 cmd:option('-print_iter', 50)
