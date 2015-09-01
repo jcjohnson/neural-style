@@ -3,7 +3,7 @@ require 'nn'
 require 'image'
 require 'optim'
 
-require 'loadcaffe'
+local loadcaffe_wrap = require 'loadcaffe_wrapper'
 
 --------------------------------------------------------------------------------
 
@@ -16,9 +16,11 @@ cmd:option('-image_size', 512, 'Maximum height / width of generated image')
 cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
 
 -- Optimization options
-cmd:option('-content_weight', 0.1)
-cmd:option('-style_weight', 1.0)
+cmd:option('-content_weight', 1.0)
+cmd:option('-style_weight', 10.0)
+cmd:option('-tv_weight', 0)
 cmd:option('-num_iterations', 1000)
+cmd:option('-init', 'random', 'random|image')
 
 -- Output options
 cmd:option('-print_iter', 50)
@@ -36,13 +38,15 @@ local function main(params)
     require 'cutorch'
     require 'cunn'
     cutorch.setDevice(params.gpu + 1)
+  else
+    params.backend = 'nn-cpu'
   end
 
   if params.backend == 'cudnn' then
     require 'cudnn'
   end
   
-  local cnn = loadcaffe.load(params.proto_file, params.model_file, params.backend):float()
+  local cnn = loadcaffe_wrap.load(params.proto_file, params.model_file, params.backend):float()
   if params.gpu >= 0 then
     cnn:cuda()
   end
@@ -61,14 +65,21 @@ local function main(params)
   end
   
   -- Hardcode these for now
-  local content_layers = {18}
-  local style_layers = {2, 7, 12, 15, 21}
-  local style_layer_weights = {1e1, 1e1, 1e1, 1e1, 1e1}
+  local content_layers = {12}
+  local style_layers = {2, 7, 12, 15}
+  local style_layer_weights = {1e1, 1e1, 1e1, 1e1}
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
   local next_content_idx, next_style_idx = 1, 1
   local net = nn.Sequential()
+  if params.tv_weight > 0 then
+    local tv_mod = nn.TVLoss(params.tv_weight):float()
+    if params.gpu >= 0 then
+      tv_mod:cuda()
+    end
+    net:add(tv_mod)
+  end
   for i = 1, #cnn do
     if next_content_idx <= #content_layers or next_style_idx <= #style_layers then
       net:add(cnn:get(i))
@@ -103,8 +114,14 @@ local function main(params)
   end
   
   -- Initialize the image
-  local img = torch.randn(content_image:size()):float()
-  -- local img = content_image_caffe:clone():float()
+  local img = nil
+  if params.init == 'random' then
+    img = torch.randn(content_image:size()):float():mul(0.001)
+  elseif params.init == 'image' then
+    img = content_image_caffe:clone():float()
+  else
+    error('Invalid init type')
+  end
   if params.gpu >= 0 then
     img = img:cuda()
   end
@@ -114,21 +131,6 @@ local function main(params)
   -- zeros into the top of the net on the backward pass.
   local y = net:forward(img)
   local dy = img.new(#y):zero()
-  
-  -- Function to evaluate loss and gradient. We run the net forward and
-  -- backward to get the gradient, and sum up losses from the loss modules.
-  local function feval(x)
-    net:forward(x)
-    local grad = net:backward(x, dy)
-    local loss = 0
-    for _, mod in ipairs(content_losses) do
-      loss = loss + mod.loss
-    end
-    for _, mod in ipairs(style_losses) do
-      loss = loss + mod.loss
-    end
-    return loss, grad
-  end
 
   local function maybe_print(t)
     local verbose = (params.print_iter > 0 and t % params.print_iter == 0)
@@ -144,7 +146,6 @@ local function main(params)
   end
 
   local function maybe_save(t)
-    -- Maybe save the intermediate output
     local should_save = params.save_iter > 0 and t % params.save_iter == 0
     should_save = should_save or t == params.num_iterations
     if should_save then
@@ -158,8 +159,13 @@ local function main(params)
     end
   end
 
+  -- Function to evaluate loss and gradient. We run the net forward and
+  -- backward to get the gradient, and sum up losses from the loss modules.
+  -- optim.lbfgs internally handles iteration and calls this fucntion many
+  -- times, so we manually count the number of iterations to handle printing
+  -- and saving intermediate results.
   local num_calls = 0
-  local function feval_lbfgs(x)
+  local function feval(x)
     num_calls = num_calls + 1
     net:forward(x)
     local grad = net:backward(x, dy)
@@ -172,16 +178,17 @@ local function main(params)
     end
     maybe_print(num_calls)
     maybe_save(num_calls)
+
+    -- optim.lbfgs expects a vector for gradients
     return loss, grad:view(grad:nElement())
   end
 
-  
   -- Run optimization.
   local optim_state = {
     maxIter = params.num_iterations,
+    verbose=true,
   }
-  local img_flat = img:view(img:nElement())
-  local x, losses = optim.lbfgs(feval_lbfgs, img, optim_state)
+  local x, losses = optim.lbfgs(feval, img, optim_state)
 end
   
 
@@ -298,6 +305,39 @@ function StyleLoss:updateGradInput(input, gradOutput)
   local dG = self.crit:backward(self.G, self.target)
   dG:div(input:nElement())
   self.gradInput = self.gram:backward(input, dG)
+  self.gradInput:mul(self.strength)
+  self.gradInput:add(gradOutput)
+  return self.gradInput
+end
+
+
+local TVLoss, parent = torch.class('nn.TVLoss', 'nn.Module')
+
+function TVLoss:__init(strength)
+  parent.__init(self)
+  self.strength = strength
+  self.x_diff = torch.Tensor()
+  self.y_diff = torch.Tensor()
+end
+
+function TVLoss:updateOutput(input)
+  self.output = input
+  return self.output
+end
+
+-- TV loss backward pass inspired by kaishengtai/neuralart
+function TVLoss:updateGradInput(input, gradOutput)
+  self.gradInput:resizeAs(input):zero()
+  local C, H, W = input:size(1), input:size(2), input:size(3)
+  self.x_diff:resize(3, H - 1, W - 1)
+  self.y_diff:resize(3, H - 1, W - 1)
+  self.x_diff:copy(input[{{}, {1, -2}, {1, -2}}])
+  self.x_diff:add(-1, input[{{}, {1, -2}, {2, -1}}])
+  self.y_diff:copy(input[{{}, {1, -2}, {1, -2}}])
+  self.y_diff:add(-1, input[{{}, {2, -1}, {1, -2}}])
+  self.gradInput[{{}, {1, -2}, {1, -2}}]:add(self.x_diff):add(self.y_diff)
+  self.gradInput[{{}, {1, -2}, {2, -1}}]:add(-1, self.x_diff)
+  self.gradInput[{{}, {2, -1}, {1, -2}}]:add(-1, self.y_diff)
   self.gradInput:mul(self.strength)
   self.gradInput:add(gradOutput)
   return self.gradInput
