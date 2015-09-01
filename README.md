@@ -15,6 +15,7 @@ onto a night-time photograph of the Stanford campus:
 Applying the style of different images to the same content image gives interesting results.
 Here are the results of applying the style of various pieces of artwork to this photograph of the
 golden gate bridge:
+
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/golden_gate.jpg" height="200px">
 
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/frida_kahlo.jpg" height="180px">
