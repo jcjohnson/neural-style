@@ -54,3 +54,10 @@ Other options:
 * `-model_file`: Path to the `.caffemodel` file for the VGG Caffe model.
 * `-backend`: `nn` or `cudnn`. Default is `nn`. `cudnn` requires
   [cudnn.torch](https://github.com/soumith/cudnn.torch).
+
+
+## Speed
+On a GTX Titan X, running 1000 iterations of gradient descent with `-image_size=512` takes about 2 minutes.
+In CPU mode on an Intel Core i7-4790k, running the same takes around 40 minutes.
+Most of the examples shown here were run for 2000 iterations, but with a bit of parameter tuning most images will
+give good results within 1000 iterations.
