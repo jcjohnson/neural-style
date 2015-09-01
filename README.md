@@ -13,6 +13,18 @@ onto a night-time photograph of the Stanford campus:
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/starry_stanford_big.png" width="706px">
 
 Applying the style of different images to the same content image gives interesting results.
+Here we reproduce Figure 2 from the paper, which renders a photograph of the Tubingen in Germany in a
+variety of styles:
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/tubingen.jpg" height="250px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_shipwreck.png" height="250px">
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_starry.png" height="250px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_scream.png" height="250px">
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_seated_nude.png" height="250px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_composition_vii.png" height="250px">
+
 Here are the results of applying the style of various pieces of artwork to this photograph of the
 golden gate bridge:
 
@@ -73,8 +85,6 @@ Optimization options:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 0.1
 * `-style_weight`: How much to weight the style reconstruction term. Default is 1.0.
 * `-num_iterations`: Default is 1000.
-* `-learning_rate`: Default is 5.0.
-* `-momentum`: Default is 0.9.
 
 Output options:
 * `-output_image`: Name of the output image. Default is `out.png`.
@@ -95,7 +105,8 @@ Most of the examples shown here were run for 2000 iterations, but with a bit of 
 give good results within 1000 iterations.
 
 ## Implementation details
-Images are initialized with the content image and optimized using gradient descent with momentum.
+Images are initialized with white noise and optimized using L-BFGS.
 
 We perform style reconstructions using the `conv1_1`, `conv2_1`, `conv3_1`, `conv4_1`, and `conv5_1` layers
-and content reconstructions using the `conv2_1` layer. The losses at the five style reconstruction layers are weighted using hand-tuned weights; these are probably not optimal but seem to give good results for a variety of images.
+and content reconstructions using the `conv4_2` layer. As in the paper, the five style reconstruction losses have
+equal weights.
