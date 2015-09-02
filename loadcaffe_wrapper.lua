@@ -26,7 +26,7 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
     while true do
       local line = fin:read('*line')
       if line == nil then break end
-      if line_num ~= 2 then
+      if line_num ~= 2  and line_num ~= 4 then
         fout:write(line, '\n')
       end
       line_num = line_num + 1
