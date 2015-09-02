@@ -78,6 +78,9 @@ After installing dependencies, you'll need to run the following script to downlo
 ```
 sh models/download_models.sh
 ```
+This will download the original [VGG-19 model](https://gist.github.com/ksimonyan/3785162f95cd2d5fee77#file-readme-md).
+Leon Gatys has graciously provided the modified version of the VGG-19 model that was used in their paper;
+this will also be downloaded. By default the original VGG-19 model is used.
 
 ## Usage
 Basic usage:
@@ -93,6 +96,9 @@ Optimization options:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 0.1
 * `-style_weight`: How much to weight the style reconstruction term. Default is 1.0.
 * `-num_iterations`: Default is 1000.
+* `-init`: Method for generating the generated image; one of `random` or `image`.
+  Default is `random` which uses a noise initialization as in the paper; `image`
+  initializes with the content image.
 
 Output options:
 * `-output_image`: Name of the output image. Default is `out.png`.
@@ -102,8 +108,13 @@ Output options:
 Other options:
 * `-proto_file`: Path to the `deploy.txt` file for the VGG Caffe model.
 * `-model_file`: Path to the `.caffemodel` file for the VGG Caffe model.
+  Default is the original VGG-19 model; you can also try the normalized VGG-19 model used in the paper.
+* `-pooling`: The type of pooling layers to use; one of `max` or `avg`. Default is `avg`.
+  The VGG-19 models uses max pooling layers, but the paper mentions that replacing these layers with average
+  pooling layers can improve the results. I haven't been able to get good results using average pooling, but
+  the option is here.
 * `-backend`: `nn` or `cudnn`. Default is `nn`. `cudnn` requires
-  [cudnn.torch](https://github.com/soumith/cudnn.torch).
+  [cudnn.torch](https://github.com/soumith/cudnn.torch) and may reduce memory usage.
 
 
 ## Speed
