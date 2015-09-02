@@ -66,6 +66,14 @@ Optional dependencies:
 * CUDA 6.5+
 * [cudnn.torch](https://github.com/soumith/cudnn.torch)
 
+**NOTE**: If your machine does not have CUDA installed, then you may need to install loadcaffe manually
+like this:
+```
+git clone https://github.com/szagoruyko/loadcaffe.git
+# Edit the file loadcaffe/loadcaffe-1.0-0.rockspec
+# Delete lines 21 and 22 that mention cunn and inn
+luarocks install loadcaffe/loadcaffe-1.0-0.rockspec
+```
 After installing dependencies, you'll need to run the following script to download the VGG model:
 ```
 sh models/download_models.sh
