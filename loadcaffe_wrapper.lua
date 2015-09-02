@@ -2,7 +2,12 @@ local ffi = require 'ffi'
 require 'loadcaffe'
 local C = loadcaffe.C
 
-
+--[[
+  Most of this function is copied from
+  https://github.com/szagoruyko/loadcaffe/blob/master/loadcaffe.lua
+  with some horrible horrible hacks added by Justin Johnson to
+  make it possible to load VGG-19 without any CUDA dependency.
+--]]
 local function loadcaffe_load(prototxt_name, binary_name, backend)
   local backend = backend or 'nn'
   local handle = ffi.new('void*[1]')
@@ -16,6 +21,20 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
   -- writes to a script file
   local lua_name = prototxt_name..'.lua'
 
+  -- C.loadBinary creates a .lua source file that builds up a table
+  -- containing the layers of the network. As a horrible dirty hack,
+  -- we'll modify this file when backend "nn-cpu" is requested by
+  -- doing the following:
+  --
+  -- (1) Delete the lines that import cunn and inn, which are always
+  --     at lines 2 and 4
+  -- (2) Remove calls to :ceil(); these calls cause the inn implementation
+  --     of SpatialMaxPooling to be used, which we can't use because inn
+  --     depends on cunn. In general the two are different, but as long
+  --     as the receptive fields evenly divide the height and width of
+  --     the feaure map they should be the same. Although this is not true
+  --     in general it is true for the VGG-19 network used by neural-style,
+  --     so swapping inn pooling for nn pooling should be safe.
   local model = nil
   if backend == 'nn-cpu' then
     C.convertProtoToLua(handle, lua_name, 'nn')
@@ -27,6 +46,10 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
       local line = fin:read('*line')
       if line == nil then break end
       if line_num ~= 2  and line_num ~= 4 then
+        local a, b = string.find(line, ":ceil%(%)")
+        if a then
+          line = string.sub(line, 1, a-1)..string.sub(line, b+1)
+        end
         fout:write(line, '\n')
       end
       line_num = line_num + 1
