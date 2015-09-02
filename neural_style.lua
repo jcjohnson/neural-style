@@ -10,8 +10,10 @@ local loadcaffe_wrap = require 'loadcaffe_wrapper'
 local cmd = torch.CmdLine()
 
 -- Basic options
-cmd:option('-style_image', 'inputs/starry_night.jpg', 'Style target image')
-cmd:option('-content_image', 'inputs/lake.jpg', 'Content target image')
+cmd:option('-style_image', 'examples/inputs/seated-nude.jpg',
+           'Style target image')
+cmd:option('-content_image', 'examples/inputs/tubingen.jpg',
+           'Content target image')
 cmd:option('-image_size', 512, 'Maximum height / width of generated image')
 cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
 
