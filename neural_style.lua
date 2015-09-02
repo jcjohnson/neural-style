@@ -92,7 +92,7 @@ local function main(params)
         assert(layer.padW == 0 and layer.padH == 0)
         local kW, kH = layer.kW, layer.kH
         local dW, dH = layer.dW, layer.dH
-        local avg_pool_layer = inn.SpatialAveragePooling(kW, kH, dW, dH):float()
+        local avg_pool_layer = nn.SpatialAveragePooling(kW, kH, dW, dH):float()
         if params.gpu >= 0 then avg_pool_layer:cuda() end
         local msg = 'Replacing max pooling at layer %d with average pooling'
         print(string.format(msg, i))
