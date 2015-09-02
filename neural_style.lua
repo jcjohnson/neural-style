@@ -18,9 +18,9 @@ cmd:option('-image_size', 512, 'Maximum height / width of generated image')
 cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
 
 -- Optimization options
-cmd:option('-content_weight', 1.0)
-cmd:option('-style_weight', 10.0)
-cmd:option('-tv_weight', 0.0005)
+cmd:option('-content_weight', 5e0)
+cmd:option('-style_weight', 1e2)
+cmd:option('-tv_weight', 1e-3)
 cmd:option('-num_iterations', 1000)
 cmd:option('-init', 'random', 'random|image')
 
@@ -30,6 +30,7 @@ cmd:option('-save_iter', 100)
 cmd:option('-output_image', 'out.png')
 
 -- Other options
+cmd:option('-pooling', 'max', 'max|avg')
 cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
 cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
 cmd:option('-backend', 'nn', 'nn|cudnn')
@@ -67,9 +68,9 @@ local function main(params)
   end
   
   -- Hardcode these for now
-  local content_layers = {21}
-  local style_layers = {2, 7, 12, 15, 21}
-  local style_layer_weights = {1e1, 1e1, 1e1, 1e1, 1e1}
+  local content_layers = {23}
+  local style_layers = {2, 7, 12, 21, 30}
+  local style_layer_weights = {1e0, 1e0, 1e0, 1e0, 1e0}
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
@@ -84,7 +85,22 @@ local function main(params)
   end
   for i = 1, #cnn do
     if next_content_idx <= #content_layers or next_style_idx <= #style_layers then
-      net:add(cnn:get(i))
+      local layer = cnn:get(i)
+      local layer_type = torch.type(layer)
+      local is_pooling = (layer_type == 'cudnn.SpatialMaxPooling' or layer_type == 'nn.SpatialMaxPooling')
+      if is_pooling and params.pooling == 'avg' then
+        assert(layer.padW == 0 and layer.padH == 0)
+        local kW, kH = layer.kW, layer.kH
+        local dW, dH = layer.dW, layer.dH
+        local avg_pool_layer = inn.SpatialAveragePooling(kW, kH, dW, dH):float()
+        if params.gpu >= 0 then avg_pool_layer:cuda() end
+        local msg = 'Replacing max pooling at layer %d with average pooling'
+        print(string.format(msg, i))
+        net:add(avg_pool_layer)
+      else
+        net:add(layer)
+      end
+      -- net:add(cnn:get(i))
       if i == content_layers[next_content_idx] then
         local target = net:forward(content_image_caffe):clone()
         local loss_module = nn.ContentLoss(params.content_weight, target):float()
@@ -134,7 +150,13 @@ local function main(params)
   local y = net:forward(img)
   local dy = img.new(#y):zero()
 
-  local function maybe_print(t)
+  -- Declaring this here lets us access it in maybe_print
+  local optim_state = {
+    maxIter = params.num_iterations,
+    verbose=true,
+  }
+
+  local function maybe_print(t, loss)
     local verbose = (params.print_iter > 0 and t % params.print_iter == 0)
     if verbose then
       print(string.format('Iteration %d / %d', t, params.num_iterations))
@@ -144,6 +166,7 @@ local function main(params)
       for i, loss_module in ipairs(style_losses) do
         print(string.format('  Style %d loss: %f', i, loss_module.loss))
       end
+      print(string.format('  Total loss: %f', loss))
     end
   end
 
@@ -178,7 +201,7 @@ local function main(params)
     for _, mod in ipairs(style_losses) do
       loss = loss + mod.loss
     end
-    maybe_print(num_calls)
+    maybe_print(num_calls, loss)
     maybe_save(num_calls)
 
     -- optim.lbfgs expects a vector for gradients
@@ -186,10 +209,6 @@ local function main(params)
   end
 
   -- Run optimization.
-  local optim_state = {
-    maxIter = params.num_iterations,
-    verbose=true,
-  }
   local x, losses = optim.lbfgs(feval, img, optim_state)
 end
   
