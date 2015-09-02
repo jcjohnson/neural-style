@@ -95,6 +95,8 @@ Options:
 Optimization options:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
 * `-style_weight`: How much to weight the style reconstruction term. Default is 1e2.
+* `-tv_weight`: Weight of total-variation (TV) regularization; this helps to smooth the image.
+  Default is 1e-3. Set to 0 to disable TV regularization.
 * `-num_iterations`: Default is 1000.
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
