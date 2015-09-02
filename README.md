@@ -93,8 +93,8 @@ Options:
 * `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to -1.
 
 Optimization options:
-* `-content_weight`: How much to weight the content reconstruction term. Default is 0.1
-* `-style_weight`: How much to weight the style reconstruction term. Default is 1.0.
+* `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
+* `-style_weight`: How much to weight the style reconstruction term. Default is 1e2.
 * `-num_iterations`: Default is 1000.
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
@@ -109,7 +109,7 @@ Other options:
 * `-proto_file`: Path to the `deploy.txt` file for the VGG Caffe model.
 * `-model_file`: Path to the `.caffemodel` file for the VGG Caffe model.
   Default is the original VGG-19 model; you can also try the normalized VGG-19 model used in the paper.
-* `-pooling`: The type of pooling layers to use; one of `max` or `avg`. Default is `avg`.
+* `-pooling`: The type of pooling layers to use; one of `max` or `avg`. Default is `max`.
   The VGG-19 models uses max pooling layers, but the paper mentions that replacing these layers with average
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
