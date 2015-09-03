@@ -30,6 +30,7 @@ cmd:option('-save_iter', 100)
 cmd:option('-output_image', 'out.png')
 
 -- Other options
+cmd:option('-style_scale', 1.0)
 cmd:option('-pooling', 'max', 'max|avg')
 cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
 cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
@@ -59,7 +60,8 @@ local function main(params)
   local content_image_caffe = preprocess(content_image):float()
   
   local style_image = grayscale_to_rgb(image.load(params.style_image))
-  style_image = image.scale(style_image, params.image_size, 'bilinear')
+  local style_size = math.ceil(params.style_scale * params.image_size)
+  style_image = image.scale(style_image, style_size, 'bilinear')
   local style_image_caffe = preprocess(style_image):float()
   
   if params.gpu >= 0 then
@@ -100,7 +102,6 @@ local function main(params)
       else
         net:add(layer)
       end
-      -- net:add(cnn:get(i))
       if i == content_layers[next_content_idx] then
         local target = net:forward(content_image_caffe):clone()
         local loss_module = nn.ContentLoss(params.content_weight, target):float()
