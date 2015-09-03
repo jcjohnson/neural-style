@@ -56,7 +56,7 @@ as shown in this example where we port the style of [Picasso's 1907 self-portrai
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/pitt_picasso_content_01_style_10.png" height="220px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/pitt_picasso_content_0025_style_10.png" height="220px">
 
-By resizing the scale of the style image before extracting style features, we can control the types of artistic
+By resizing the style image before extracting style features, we can control the types of artistic
 features that are transfered from the style image; you can control this behavior with the `-style_scale` flag.
 Below we see three examples of rendering the Golden Gate Bridge in the style of The Starry Night.
 From left to right, `-style_scale` is 2.0, 1.0, and 0.5.
