@@ -56,6 +56,15 @@ as shown in this example where we port the style of [Picasso's 1907 self-portrai
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/pitt_picasso_content_01_style_10.png" height="220px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/pitt_picasso_content_0025_style_10.png" height="220px">
 
+By resizing the scale of the style image before extracting style features, we can control the types of artistic
+features that are transfered from the style image; you can control this behavior with the `-style_scale` flag.
+Below we see three examples of rendering the Golden Gate Bridge in the style of The Starry Night.
+From left to right, `-style_scale` is 2.0, 1.0, and 0.5.
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale2.png" height=180px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale1.png" height=180px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale05.png" height=180px">
+
 ## Setup:
 
 Dependencies:
@@ -108,6 +117,7 @@ Output options:
 * `-save_iter`: Save the image every `save_iter` iterations. Set to 0 to disable saving intermediate results.
 
 Other options:
+* `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
 * `-proto_file`: Path to the `deploy.txt` file for the VGG Caffe model.
 * `-model_file`: Path to the `.caffemodel` file for the VGG Caffe model.
   Default is the original VGG-19 model; you can also try the normalized VGG-19 model used in the paper.
