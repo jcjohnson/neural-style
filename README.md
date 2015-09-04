@@ -120,6 +120,31 @@ Other options:
 * `-backend`: `nn` or `cudnn`. Default is `nn`. `cudnn` requires
   [cudnn.torch](https://github.com/soumith/cudnn.torch) and may reduce memory usage.
 
+## Frequently Asked Questions
+
+**Problem:** Generated image has saturation artifacts:
+
+<img src="https://cloud.githubusercontent.com/assets/1310570/9694690/fa8e8782-5328-11e5-9c91-11f7b215ad19.png">
+
+**Solution:** Update the `image` packge to the latest version: `luarocks install image`
+
+**Problem:** Running without a GPU gives an error message complaining about `cutorch` not found
+
+**Solution:**
+Pass the flag `-gpu -1` when running in CPU-only mode
+
+**Problem:** The program runs out of memory and dies
+
+**Solution:** Try reducing the image size: `-image_size 256` (or lower). Note that different image sizes will likely
+require non-default values for `-style_weight` and `-content_weight` for optimal results.
+If you are running on a GPU, you can also try running with `-backend cudnn` to reduce memory usage.
+
+**Problem:** Get the following error message:
+
+`models/VGG_ILSVRC_19_layers_deploy.prototxt.cpu.lua:7: attempt to call method 'ceil' (a nil value)`
+
+**Solution:** Update `nn` package to the latest version: `luarocks install nn`
+
 
 ## Speed
 On a GTX Titan X, running 1000 iterations of gradient descent with `-image_size=512` takes about 2 minutes.
