@@ -131,6 +131,10 @@ local function main(params)
       end
     end
   end
+
+  -- We don't need the base CNN anymore, so clean it up to save memory.
+  cnn = nil
+  collectgarbage()
   
   -- Initialize the image
   local img = nil
@@ -205,6 +209,7 @@ local function main(params)
     maybe_print(num_calls, loss)
     maybe_save(num_calls)
 
+    collectgarbage()
     -- optim.lbfgs expects a vector for gradients
     return loss, grad:view(grad:nElement())
   end
