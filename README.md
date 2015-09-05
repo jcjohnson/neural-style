@@ -10,7 +10,7 @@ onto a night-time photograph of the Stanford campus:
 
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/starry_night.jpg" height="200px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/hoovertowernight.jpg" height="200px">
-<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/starry_stanford_big.png" width="706px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/starry_stanford_big_2.png" width="706px">
 
 Applying the style of different images to the same content image gives interesting results.
 Here we reproduce Figure 2 from the paper, which renders a photograph of the Tubingen in Germany in a
