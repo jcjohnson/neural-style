@@ -83,6 +83,8 @@ This will download the original [VGG-19 model](https://gist.github.com/ksimonyan
 Leon Gatys has graciously provided the modified version of the VGG-19 model that was used in their paper;
 this will also be downloaded. By default the original VGG-19 model is used.
 
+You can find detailed installation instructions for Ubuntu in the [installation guide](INSTALL.md).
+
 ## Usage
 Basic usage:
 ```
