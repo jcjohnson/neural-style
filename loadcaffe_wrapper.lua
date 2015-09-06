@@ -55,6 +55,7 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
   local net = nn.Sequential()
   local list_modules = model
   for i,item in ipairs(list_modules) do
+    item[2].name = item[1]
     if item[2].weight then
       local w = torch.FloatTensor()
       local bias = torch.FloatTensor()

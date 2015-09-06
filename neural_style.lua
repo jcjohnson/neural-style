@@ -73,8 +73,8 @@ local function main(params)
   end
   
   -- Hardcode these for now
-  local content_layers = {23}
-  local style_layers = {2, 7, 12, 21, 30}
+  local content_layers = {'relu4_2'}
+  local style_layers = {'relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1'}
   local style_layer_weights = {1e0, 1e0, 1e0, 1e0, 1e0}
 
   -- Set up the network, inserting style and content loss modules
@@ -91,6 +91,7 @@ local function main(params)
   for i = 1, #cnn do
     if next_content_idx <= #content_layers or next_style_idx <= #style_layers then
       local layer = cnn:get(i)
+      local name = layer.name
       local layer_type = torch.type(layer)
       local is_pooling = (layer_type == 'cudnn.SpatialMaxPooling' or layer_type == 'nn.SpatialMaxPooling')
       if is_pooling and params.pooling == 'avg' then
@@ -105,7 +106,8 @@ local function main(params)
       else
         net:add(layer)
       end
-      if i == content_layers[next_content_idx] then
+      if name == content_layers[next_content_idx] then
+        print("Setting up content layer", i, ":", layer.name)
         local target = net:forward(content_image_caffe):clone()
         local norm = params.normalize_gradients
         local loss_module = nn.ContentLoss(params.content_weight, target, norm):float()
@@ -116,7 +118,8 @@ local function main(params)
         table.insert(content_losses, loss_module)
         next_content_idx = next_content_idx + 1
       end
-      if i == style_layers[next_style_idx] then
+      if name == style_layers[next_style_idx] then
+        print("Setting up style layer  ", i, ":", layer.name)
         local gram = GramMatrix():float()
         if params.gpu >= 0 then
           gram = gram:cuda()
