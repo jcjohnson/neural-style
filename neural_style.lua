@@ -55,11 +55,11 @@ local function main(params)
     cnn:cuda()
   end
   
-  local content_image = grayscale_to_rgb(image.load(params.content_image))
+  local content_image = image.load(params.content_image, 3)
   content_image = image.scale(content_image, params.image_size, 'bilinear')
   local content_image_caffe = preprocess(content_image):float()
   
-  local style_image = grayscale_to_rgb(image.load(params.style_image))
+  local style_image = image.load(params.style_image, 3)
   local style_size = math.ceil(params.style_scale * params.image_size)
   style_image = image.scale(style_image, style_size, 'bilinear')
   local style_image_caffe = preprocess(style_image):float()
@@ -237,16 +237,6 @@ function preprocess(img)
   mean_pixel = mean_pixel:view(3, 1, 1):expandAs(img)
   img:add(-1, mean_pixel)
   return img
-end
-
-
-function grayscale_to_rgb(img)
-  local c, h, w = img:size(1), img:size(2), img:size(3)
-  if c == 1 then
-    return img:expand(3, h, w):contiguous()
-  else
-    return img
-  end
 end
 
 
