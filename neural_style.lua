@@ -220,10 +220,9 @@ end
   
 
 function build_filename(output_image, iteration)
-  local idx = string.find(output_image, '%.')
-  local basename = string.sub(output_image, 1, idx - 1)
-  local ext = string.sub(output_image, idx)
-  return string.format('%s_%d%s', basename, iteration, ext)
+  local ext = paths.extname(output_image)
+  local basename = paths.basename(output_image, ext)
+  return string.format('%s_%d.%s', basename, iteration, ext)
 end
 
 
