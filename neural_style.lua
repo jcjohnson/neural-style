@@ -24,6 +24,8 @@ cmd:option('-tv_weight', 1e-3)
 cmd:option('-num_iterations', 1000)
 cmd:option('-normalize_gradients', false)
 cmd:option('-init', 'random', 'random|image')
+cmd:option('-optimizer', 'lbfgs', 'lbfgs|adam')
+cmd:option('-learning_rate', 1e1)
 
 -- Output options
 cmd:option('-print_iter', 50)
@@ -159,10 +161,19 @@ local function main(params)
   local dy = img.new(#y):zero()
 
   -- Declaring this here lets us access it in maybe_print
-  local optim_state = {
-    maxIter = params.num_iterations,
-    verbose=true,
-  }
+  local optim_state = nil
+  if params.optimizer == 'lbfgs' then
+    optim_state = {
+      maxIter = params.num_iterations,
+      verbose=true,
+    }
+  elseif params.optimizer == 'adam' then
+    optim_state = {
+      learningRate = params.learning_rate,
+    }
+  else
+    error(string.format('Unrecognized optimizer "%s"', params.optimizer))
+  end
 
   local function maybe_print(t, loss)
     local verbose = (params.print_iter > 0 and t % params.print_iter == 0)
@@ -218,7 +229,15 @@ local function main(params)
   end
 
   -- Run optimization.
-  local x, losses = optim.lbfgs(feval, img, optim_state)
+  if params.optimizer == 'lbfgs' then
+    print('Running optimization with L-BFGS')
+    local x, losses = optim.lbfgs(feval, img, optim_state)
+  elseif params.optimizer == 'adam' then
+    print('Running optimization with ADAM')
+    for t = 1, params.num_iterations do
+      local x, losses = optim.adam(feval, img, optim_state)
+    end
+  end
 end
   
 
