@@ -104,6 +104,8 @@ Optimization options:
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
   initializes with the content image.
+* `-normalize_gradients`: If this flag is present, style and content gradients from each layer will be
+  L1 normalized. Idea from [andersbll/neural_artistic_style](https://github.com/andersbll/neural_artistic_style).
 
 Output options:
 * `-output_image`: Name of the output image. Default is `out.png`.
