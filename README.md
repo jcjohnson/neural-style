@@ -104,6 +104,12 @@ Optimization options:
 * `-init`: Method for generating the generated image; one of `random` or `image`.
   Default is `random` which uses a noise initialization as in the paper; `image`
   initializes with the content image.
+* `-optimizer`: The optimization algorithm to use; either `lbfgs` or `adam`; default is `lbfgs`.
+  L-BFGS tends to give better results, but uses more memory. Switching to ADAM will reduce memory usage;
+  when using ADAM you will probably need to play with other parameters to get good results, especially
+  the style weight, content weight, and learning rate; you may also want to normalize gradients when
+  using ADAM.
+* `-learning_rate`: Learning rate to use with the ADAM optimizer. Default is 1e1.
 * `-normalize_gradients`: If this flag is present, style and content gradients from each layer will be
   L1 normalized. Idea from [andersbll/neural_artistic_style](https://github.com/andersbll/neural_artistic_style).
 
