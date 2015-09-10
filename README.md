@@ -155,6 +155,20 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Solution:** Update `nn` package to the latest version: `luarocks install nn`
 
+## Memory Usage
+By default, `neural-style` uses the `nn` backend for convolutions and L-BFGS for optimization.
+These give good results, but can both use a lot of memory. You can reduce memory usage with the following:
+
+* **Use cuDNN**: Add the flag `-backend cudnn` to use the cuDNN backend. This will only work in GPU mode.
+* **Use ADAM**: Add the flag `-optimizer adam` to use ADAM instead of L-BFGS. This should significantly
+  reduce memory usage, but may require tuning of other parameters for good results; in particular you should
+  play with the learning rate, content weight, style weight, and also consider using gradient normalization.
+  This should work in both CPU and GPU modes.
+* **Reduce image size**: If the above tricks are not enough, you can reduce the size of the generated image;
+  pass the flag `-image_size 256` to generate an image at half the default size.
+  
+With the default settings, `neural-style` uses about 3.5GB of GPU memory on my system;
+switching to ADAM and cuDNN reduces the GPU memory footprint to about 1GB.
 
 ## Speed
 On a GTX Titan X, running 1000 iterations of gradient descent with `-image_size=512` takes about 2 minutes.
