@@ -39,6 +39,8 @@ cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
 cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
 cmd:option('-backend', 'nn', 'nn|cudnn')
 
+cmd:option('-content_layers', 'relu4_2', 'layers for content')
+cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 
 local function main(params)
   if params.gpu >= 0 then
@@ -72,10 +74,9 @@ local function main(params)
     style_image_caffe = style_image_caffe:cuda()
   end
   
-  -- Hardcode these for now
-  local content_layers = {'relu4_2'}
-  local style_layers = {'relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1'}
-  local style_layer_weights = {1e0, 1e0, 1e0, 1e0, 1e0}
+  local content_layers = params.content_layers:split(",")
+  local style_layers = params.style_layers:split(",")
+  local style_layer_weights = {1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0}
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
