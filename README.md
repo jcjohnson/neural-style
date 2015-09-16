@@ -118,6 +118,12 @@ Output options:
 * `-print_iter`: Print progress every `print_iter` iterations. Set to 0 to disable printing.
 * `-save_iter`: Save the image every `save_iter` iterations. Set to 0 to disable saving intermediate results.
 
+Layer options:
+* `-content_layers`: Comma-separated list of layer names to use for content reconstruction.
+  Default is `relu4_2`.
+* `-style_layers`: Comman-separated list of layer names to use for style reconstruction.
+  Default is `relu1_1,relu2_1,relu3_1,relu4_1,relu5_1`.
+
 Other options:
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
 * `-proto_file`: Path to the `deploy.txt` file for the VGG Caffe model.
@@ -154,6 +160,10 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 `models/VGG_ILSVRC_19_layers_deploy.prototxt.cpu.lua:7: attempt to call method 'ceil' (a nil value)`
 
 **Solution:** Update `nn` package to the latest version: `luarocks install nn`
+
+**Problem:** Get an error message complaining about `paths.extname`
+
+**Solution:** Update `torch.paths` package to the latest version: `luarocks install paths`
 
 ## Memory Usage
 By default, `neural-style` uses the `nn` backend for convolutions and L-BFGS for optimization.
