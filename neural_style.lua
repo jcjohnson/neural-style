@@ -12,6 +12,7 @@ local cmd = torch.CmdLine()
 -- Basic options
 cmd:option('-style_image', 'examples/inputs/seated-nude.jpg',
            'Style target image')
+cmd:option('-style_blend_weights', 'nil')
 cmd:option('-content_image', 'examples/inputs/tubingen.jpg',
            'Content target image')
 cmd:option('-image_size', 512, 'Maximum height / width of generated image')
@@ -64,14 +65,45 @@ local function main(params)
   content_image = image.scale(content_image, params.image_size, 'bilinear')
   local content_image_caffe = preprocess(content_image):float()
   
-  local style_image = image.load(params.style_image, 3)
   local style_size = math.ceil(params.style_scale * params.image_size)
-  style_image = image.scale(style_image, style_size, 'bilinear')
-  local style_image_caffe = preprocess(style_image):float()
+  local style_image_list = params.style_image:split(',')
+  local style_images_caffe = {}
+  for _, img_path in ipairs(style_image_list) do
+    local img = image.load(img_path, 3)
+    img = image.scale(img, style_size, 'bilinear')
+    local img_caffe = preprocess(img):float()
+    table.insert(style_images_caffe, img_caffe)
+  end
+
+  -- Handle style blending weights for multiple style inputs
+  local style_blend_weights = nil
+  if params.style_blend_weights == 'nil' then
+    -- Style blending not specified, so use equal weighting
+    style_blend_weights = {}
+    for i = 1, #style_image_list do
+      table.insert(style_blend_weights, 1.0)
+    end
+  else
+    style_blend_weights = params.style_blend_weights:split(',')
+    assert(#style_blend_weights == #style_image_list,
+      '-style_blend_weights and -style_images must have the same number of elements')
+  end
+  -- Normalize the style blending weights so they sum to 1
+  local style_blend_sum = 0
+  for i = 1, #style_blend_weights do
+    style_blend_weights[i] = tonumber(style_blend_weights[i])
+    style_blend_sum = style_blend_sum + style_blend_weights[i]
+  end
+  for i = 1, #style_blend_weights do
+    style_blend_weights[i] = style_blend_weights[i] / style_blend_sum
+  end
   
+
   if params.gpu >= 0 then
     content_image_caffe = content_image_caffe:cuda()
-    style_image_caffe = style_image_caffe:cuda()
+    for i = 1, #style_images_caffe do
+      style_images_caffe[i] = style_images_caffe[i]:cuda()
+    end
   end
   
   local content_layers = params.content_layers:split(",")
@@ -124,9 +156,18 @@ local function main(params)
         if params.gpu >= 0 then
           gram = gram:cuda()
         end
-        local target_features = net:forward(style_image_caffe):clone()
-        local target = gram:forward(target_features)
-        target:div(target_features:nElement())
+        local target = nil
+        for i = 1, #style_images_caffe do
+          local target_features = net:forward(style_images_caffe[i]):clone()
+          local target_i = gram:forward(target_features):clone()
+          target_i:div(target_features:nElement())
+          target_i:mul(style_blend_weights[i])
+          if i == 1 then
+            target = target_i
+          else
+            target:add(target_i)
+          end
+        end
         local norm = params.normalize_gradients
         local loss_module = nn.StyleLoss(params.style_weight, target, norm):float()
         if params.gpu >= 0 then
