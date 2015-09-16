@@ -76,7 +76,6 @@ local function main(params)
   
   local content_layers = params.content_layers:split(",")
   local style_layers = params.style_layers:split(",")
-  local style_layer_weights = {1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0, 1e0}
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
@@ -128,9 +127,8 @@ local function main(params)
         local target_features = net:forward(style_image_caffe):clone()
         local target = gram:forward(target_features)
         target:div(target_features:nElement())
-        local weight = params.style_weight * style_layer_weights[next_style_idx]
         local norm = params.normalize_gradients
-        local loss_module = nn.StyleLoss(weight, target, norm):float()
+        local loss_module = nn.StyleLoss(params.style_weight, target, norm):float()
         if params.gpu >= 0 then
           loss_module:cuda()
         end
