@@ -12,6 +12,7 @@ local cmd = torch.CmdLine()
 -- Basic options
 cmd:option('-style_image', 'examples/inputs/seated-nude.jpg',
            'Style target image')
+cmd:option('-style_blend_weights', 'nil')
 cmd:option('-content_image', 'examples/inputs/tubingen.jpg',
            'Content target image')
 cmd:option('-image_size', 512, 'Maximum height / width of generated image')
@@ -73,7 +74,31 @@ local function main(params)
     local img_caffe = preprocess(img):float()
     table.insert(style_images_caffe, img_caffe)
   end
+
+  -- Handle style blending weights for multiple style inputs
+  local style_blend_weights = nil
+  if params.style_blend_weights == 'nil' then
+    -- Style blending not specified, so use equal weighting
+    style_blend_weights = {}
+    for i = 1, #style_image_list do
+      table.insert(style_blend_weights, 1.0)
+    end
+  else
+    style_blend_weights = params.style_blend_weights:split(',')
+    assert(#style_blend_weights == #style_image_list,
+      '-style_blend_weights and -style_images must have the same number of elements')
+  end
+  -- Normalize the style blending weights so they sum to 1
+  local style_blend_sum = 0
+  for i = 1, #style_blend_weights do
+    style_blend_weights[i] = tonumber(style_blend_weights[i])
+    style_blend_sum = style_blend_sum + style_blend_weights[i]
+  end
+  for i = 1, #style_blend_weights do
+    style_blend_weights[i] = style_blend_weights[i] / style_blend_sum
+  end
   
+
   if params.gpu >= 0 then
     content_image_caffe = content_image_caffe:cuda()
     for i = 1, #style_images_caffe do
@@ -136,13 +161,13 @@ local function main(params)
           local target_features = net:forward(style_images_caffe[i]):clone()
           local target_i = gram:forward(target_features):clone()
           target_i:div(target_features:nElement())
+          target_i:mul(style_blend_weights[i])
           if i == 1 then
             target = target_i
           else
             target:add(target_i)
           end
         end
-        target:div(#style_images_caffe)
         local norm = params.normalize_gradients
         local loss_module = nn.StyleLoss(params.style_weight, target, norm):float()
         if params.gpu >= 0 then
