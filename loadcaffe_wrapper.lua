@@ -47,8 +47,29 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
     fout:close()
     model = dofile(lua_name_cpu)
   else
-    C.convertProtoToLua(handle, lua_name, backend)
-    model = dofile(lua_name)
+    if backend == "clnn" then
+      C.convertProtoToLua(handle, lua_name, 'nn')
+      local lua_name_opencl = prototxt_name..'.opencl.lua'
+      local fin = assert(io.open(lua_name), 'r')
+      local fout = assert(io.open(lua_name_opencl, 'w'))
+      local line_num = 1
+      while true do
+        local line = fin:read('*line')
+        if line == nil then break end
+        if line_num > 2 and line_num ~= 4 then
+          fout:write(line, '\n')
+        elseif line_num == 1 then
+          fout:write("require 'clnn'", '\n')
+        end
+        line_num = line_num + 1
+      end
+      fin:close()
+      fout:close()
+      model = dofile(lua_name_opencl)
+    else
+      C.convertProtoToLua(handle, lua_name, backend)
+      model = dofile(lua_name)
+    end
   end
 
   -- goes over the list, copying weights from caffe blobs to torch tensor
