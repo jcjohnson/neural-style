@@ -41,6 +41,7 @@ cmd:option('-backend', 'nn', 'nn|cudnn|clnn')
 
 
 local function main(params)
+  print("In Function main")
   if params.gpu >= 0 and params.backend == 'cudnn' then
     require 'cutorch'
     require 'cunn'
@@ -57,6 +58,7 @@ local function main(params)
     require 'cudnn'
   end
   
+  print("Starting load model")
   local cnn = loadcaffe_wrap.load(params.proto_file, params.model_file, params.backend):float()
   if params.gpu >= 0 and params.backend == 'cudnn' then
     cnn:cuda()
@@ -68,10 +70,12 @@ local function main(params)
   content_image = image.scale(content_image, params.image_size, 'bilinear')
   local content_image_caffe = preprocess(content_image):float()
   
+  print("Finished content Image preprocess")
   local style_image = image.load(params.style_image, 3)
   local style_size = math.ceil(params.style_scale * params.image_size)
   style_image = image.scale(style_image, style_size, 'bilinear')
   local style_image_caffe = preprocess(style_image):float()
+  print("Finished style Image preprocess")
   
   if params.gpu >= 0 and params.backend == 'cudnn' then
     content_image_caffe = content_image_caffe:cuda()
@@ -80,12 +84,14 @@ local function main(params)
     content_image_caffe = content_image_caffe:cl()
     style_image_caffe = style_image_caffe:cl()
   end
+  print("Finished caffe variables")
   
   -- Hardcode these for now
   local content_layers = {23}
   local style_layers = {2, 7, 12, 21, 30}
   local style_layer_weights = {1e0, 1e0, 1e0, 1e0, 1e0}
 
+  print("Starting network setup")
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
   local next_content_idx, next_style_idx = 1, 1
