@@ -45,6 +45,8 @@ golden gate bridge:
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/seated-nude.jpg" height="160px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_seated.png" height="160px">
 
+### Content / Style Tradeoff
+
 The algorithm allows the user to trade-off the relative weight of the style and content reconstruction terms,
 as shown in this example where we port the style of [Picasso's 1907 self-portrait](http://www.wikiart.org/en/pablo-picasso/self-portrait-1907) onto Brad Pitt:
 
@@ -56,6 +58,8 @@ as shown in this example where we port the style of [Picasso's 1907 self-portrai
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/pitt_picasso_content_01_style_10.png" height="220px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/pitt_picasso_content_0025_style_10.png" height="220px">
 
+### Style Scale
+
 By resizing the style image before extracting style features, we can control the types of artistic
 features that are transfered from the style image; you can control this behavior with the `-style_scale` flag.
 Below we see three examples of rendering the Golden Gate Bridge in the style of The Starry Night.
@@ -64,6 +68,28 @@ From left to right, `-style_scale` is 2.0, 1.0, and 0.5.
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale2.png" height=175px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale1.png" height=175px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale05.png" height=175px">
+
+### Multiple Style Images
+You can use more than one style image to blend multiple artistic styles.
+
+Clockwise from upper left: "The Starry Night" + "The Scream", "The Scream" + "Composition VII",
+"Seated Nude" + "Composition VII", and "Seated Nude" + "The Starry Night"
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_starry_scream.png" height="250px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_scream_composition_vii.png" height="250px">
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_starry_seated.png" height="250px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_seated_nude_composition_vii.png" height="250px">
+
+
+
+### Style Interpolation
+When using multiple style images, you can control the degree to which they are blended:
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scream_3_7.png" height="175px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scream_5_5.png" height="175px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scream_7_3.png" height="175px">
+
 
 ## Setup:
 
@@ -91,11 +117,18 @@ Basic usage:
 th neural_style.lua -style_image <image.jpg> -content_image <image.jpg>
 ```
 
-Options:
+To use multiple style images, pass a comma-separated list like this:
+
+`-style_image starry_night.jpg,the_scream.jpg`.
+
+**Options**:
 * `-image_size`: Maximum side length (in pixels) of of the generated image. Default is 512.
+* `-style_blend_weights`: The weight for blending the style of multiple style images, as a
+  comma-separated list, such as `-style_blend_weights 3,7`. By default all style images
+  are equally weighted.
 * `-gpu`: Zero-indexed ID of the GPU to use; for CPU mode set `-gpu` to -1.
 
-Optimization options:
+**Optimization options**:
 * `-content_weight`: How much to weight the content reconstruction term. Default is 5e0.
 * `-style_weight`: How much to weight the style reconstruction term. Default is 1e2.
 * `-tv_weight`: Weight of total-variation (TV) regularization; this helps to smooth the image.
@@ -113,12 +146,18 @@ Optimization options:
 * `-normalize_gradients`: If this flag is present, style and content gradients from each layer will be
   L1 normalized. Idea from [andersbll/neural_artistic_style](https://github.com/andersbll/neural_artistic_style).
 
-Output options:
+**Output options**:
 * `-output_image`: Name of the output image. Default is `out.png`.
 * `-print_iter`: Print progress every `print_iter` iterations. Set to 0 to disable printing.
 * `-save_iter`: Save the image every `save_iter` iterations. Set to 0 to disable saving intermediate results.
 
-Other options:
+**Layer options**:
+* `-content_layers`: Comma-separated list of layer names to use for content reconstruction.
+  Default is `relu4_2`.
+* `-style_layers`: Comman-separated list of layer names to use for style reconstruction.
+  Default is `relu1_1,relu2_1,relu3_1,relu4_1,relu5_1`.
+
+**Other options**:
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
 * `-proto_file`: Path to the `deploy.txt` file for the VGG Caffe model.
 * `-model_file`: Path to the `.caffemodel` file for the VGG Caffe model.
@@ -154,6 +193,10 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 `models/VGG_ILSVRC_19_layers_deploy.prototxt.cpu.lua:7: attempt to call method 'ceil' (a nil value)`
 
 **Solution:** Update `nn` package to the latest version: `luarocks install nn`
+
+**Problem:** Get an error message complaining about `paths.extname`
+
+**Solution:** Update `torch.paths` package to the latest version: `luarocks install paths`
 
 ## Memory Usage
 By default, `neural-style` uses the `nn` backend for convolutions and L-BFGS for optimization.
