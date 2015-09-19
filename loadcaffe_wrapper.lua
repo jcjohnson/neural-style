@@ -58,14 +58,9 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
         local line = fin:read('*line')
         if line == nil then break end
         --[[
-        if string.find(line, "conv5_4") then
-          line = line:gsub("512", "128", 2)
-          print("Updated Line to: %s", line)
-        elseif string.find(line, "fc6") then
-          line = line:gsub("25088", "6272")
-          print("Updated Line to: %s", line)
-        end
-        ]]--
+        -- Hack to replace CUDA libraries with openCL libs. 
+        -- My machine only has an ATI Firepro V3900 so can't run CUDA libs.
+        --]]--
         if line_num > 2 and line_num ~=4 then
           fout:write(line, '\n')
         elseif line_num == 1 then
