@@ -56,9 +56,18 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
       while true do
         local line = fin:read('*line')
         if line == nil then break end
-        if line_num > 2 and line_num ~= 4 then
+        -- Fix for using nin_imagenet_conv.caffemodel
+        if line:find("inn") then
+          line = line:gsub("inn", "nn")
+        end
+        --[[
+        -- Hack to replace CUDA libraries with openCL libs. 
+        -- My machine only has an ATI Firepro V3900 so can't run CUDA libs.
+        --]]--
+        if line_num > 2 and line_num ~=4 then
           fout:write(line, '\n')
         elseif line_num == 1 then
+          fout:write("require 'nn'", '\n')
           fout:write("require 'clnn'", '\n')
         end
         line_num = line_num + 1
@@ -76,6 +85,7 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
   local net = nn.Sequential()
   local list_modules = model
   for i,item in ipairs(list_modules) do
+    --print("In iteration %d", i)
     item[2].name = item[1]
     if item[2].weight then
       local w = torch.FloatTensor()
@@ -93,6 +103,8 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
 
   if backend == 'cudnn' or backend == 'ccn2' then
     net:cuda()
+  elseif backend == 'clnn' then
+    -- net:cl()
   end
 
   return net
