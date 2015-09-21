@@ -2,3 +2,5 @@
 out*.png
 *.png
 *.jpg
+*.prototxt*
+*.caffemodel

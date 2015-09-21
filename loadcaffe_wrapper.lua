@@ -57,6 +57,10 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
       while true do
         local line = fin:read('*line')
         if line == nil then break end
+        -- Fix for using nin_imagenet_conv.caffemodel
+        if line:find("inn") then
+          line = line:gsub("inn", "nn")
+        end
         --[[
         -- Hack to replace CUDA libraries with openCL libs. 
         -- My machine only has an ATI Firepro V3900 so can't run CUDA libs.
