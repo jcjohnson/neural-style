@@ -89,7 +89,6 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
   local net = nn.Sequential()
   local list_modules = model
   for i,item in ipairs(list_modules) do
-    --print("In iteration %d", i)
     item[2].name = item[1]
     if item[2].weight then
       local w = torch.FloatTensor()
@@ -108,7 +107,7 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
   if backend == 'cudnn' or backend == 'ccn2' then
     net:cuda()
   elseif backend == 'clnn' then
-    -- net:cl()
+    net:cl()
   end
 
   return net
