@@ -38,6 +38,10 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
     while true do
       local line = fin:read('*line')
       if line == nil then break end
+      -- Fix for using nin_imagenet_conv.caffemodel
+      if line:find("inn") then
+        line = line:gsub("inn", "nn")
+      end
       if line_num ~= 2  and line_num ~= 4 then
         fout:write(line, '\n')
       end
@@ -67,7 +71,7 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
         if line_num > 2 and line_num ~=4 then
           fout:write(line, '\n')
         elseif line_num == 1 then
-          fout:write("require 'nn'", '\n')
+          -- fout:write("require 'nn'", '\n')
           fout:write("require 'clnn'", '\n')
         end
         line_num = line_num + 1
