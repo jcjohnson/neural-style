@@ -62,8 +62,22 @@ local function loadcaffe_load(prototxt_name, binary_name, backend)
         if line == nil then break end
         -- Fix for using nin_imagenet_conv.caffemodel
         if line:find("inn") then
+          print("Changing line: ", line)
           line = line:gsub("inn", "nn")
+          print("To line: ", line)
         end
+        if line:find("SoftMax") then
+          print("Changing line: ", line)
+          line = ""
+          print("To line: ", line)
+        end
+        --[[
+        if line:find("SpatialAveragePooling") then
+          print("Changing line: ", line)
+          line = line:gsub("SpatialAveragePooling", "SpatialMaxPooling")
+          print("To line: ", line)
+        end
+        ]]--
         --[[
         -- Hack to replace CUDA libraries with openCL libs. 
         -- My machine only has an ATI Firepro V3900 so can't run CUDA libs.
