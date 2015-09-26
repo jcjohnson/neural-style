@@ -39,6 +39,7 @@ cmd:option('-pooling', 'max', 'max|avg')
 cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
 cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
 cmd:option('-backend', 'nn', 'nn|cudnn')
+cmd:option('-seed', -1)
 
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
@@ -185,6 +186,9 @@ local function main(params)
   collectgarbage()
   
   -- Initialize the image
+  if params.seed >= 0 then
+    torch.manualSeed(params.seed)
+  end
   local img = nil
   if params.init == 'random' then
     img = torch.randn(content_image:size()):float():mul(0.001)
