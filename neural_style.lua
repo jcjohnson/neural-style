@@ -58,6 +58,7 @@ local function main(params)
 
   if params.backend == 'cudnn' then
     require 'cudnn'
+    cudnn.SpatialConvolution.accGradParameters = nn.SpatialConvolutionMM.accGradParameters -- ie: nop
   end
   
   local cnn = loadcaffe_wrap.load(params.proto_file, params.model_file, params.backend):float()
