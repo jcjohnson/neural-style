@@ -1,3 +1,5 @@
 *.swp
 out*.png
 *.png
+models/
+!models/download_models.sh
