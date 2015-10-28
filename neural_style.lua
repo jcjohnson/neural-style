@@ -43,9 +43,19 @@ cmd:option('-seed', -1)
 
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
+cmd:option('-initial_image', '', 'initial image')
 
 function nn.SpatialConvolutionMM:accGradParameters()
   -- nop.  not needed by our net
+end
+
+local function load_image(filepath, image_size)
+  local content_image = image.load(filepath, 3)
+  content_image = image.scale(content_image, image_size, 'bilinear')
+  local content_image_caffe = preprocess(content_image):float()
+  print('content_image:size()', content_image:size())
+  print('content_image_caffe:size()', content_image_caffe:size())
+  return content_image_caffe
 end
 
 local function main(params)
@@ -67,9 +77,7 @@ local function main(params)
     cnn:cuda()
   end
   
-  local content_image = image.load(params.content_image, 3)
-  content_image = image.scale(content_image, params.image_size, 'bilinear')
-  local content_image_caffe = preprocess(content_image):float()
+  local content_image_caffe = load_image(params.content_image, params.image_size)
   
   local style_size = math.ceil(params.style_scale * params.image_size)
   local style_image_list = params.style_image:split(',')
@@ -203,12 +211,16 @@ local function main(params)
     torch.manualSeed(params.seed)
   end
   local img = nil
-  if params.init == 'random' then
-    img = torch.randn(content_image:size()):float():mul(0.001)
-  elseif params.init == 'image' then
-    img = content_image_caffe:clone():float()
+  if params.initial_image ~= '' then
+    img = load_image(params.initial_image, params.image_size)
   else
-    error('Invalid init type')
+    if params.init == 'random' then
+      img = torch.randn(content_image_caffe:size()):float():mul(0.001)
+    elseif params.init == 'image' then
+      img = content_image_caffe:clone():float()
+    else
+      error('Invalid init type')
+    end
   end
   if params.gpu >= 0 then
     img = img:cuda()
