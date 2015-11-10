@@ -10,6 +10,7 @@ First we need to install torch, following the installation instructions
 ```
 # in a terminal, run the commands
 cd ~/
+sudo ln -s /usr/lib/x86_64-linux-gnu/libgfortran.so.3 /usr/lib/libgfortran.so
 curl -s https://raw.githubusercontent.com/torch/ezinstall/master/install-deps | bash
 git clone https://github.com/torch/distro.git ~/torch --recursive
 cd ~/torch; ./install.sh
