@@ -3,7 +3,7 @@ require 'nn'
 require 'image'
 require 'optim'
 
-local loadcaffe_wrap = require 'loadcaffe_wrapper'
+require 'loadcaffe'
 
 --------------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ local function main(params)
     cudnn.SpatialConvolution.accGradParameters = nn.SpatialConvolutionMM.accGradParameters -- ie: nop
   end
   
-  local cnn = loadcaffe_wrap.load(params.proto_file, params.model_file, params.backend):float()
+  local cnn = loadcaffe.load(params.proto_file, params.model_file, params.backend):float()
   if params.gpu >= 0 then
     cnn:cuda()
   end
