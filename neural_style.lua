@@ -44,6 +44,10 @@ cmd:option('-seed', -1)
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 
+function nn.SpatialConvolutionMM:accGradParameters()
+  -- nop.  not needed by our net
+end
+
 local function main(params)
   if params.gpu >= 0 then
     if params.backend ~= 'clnn' then
@@ -222,6 +226,14 @@ local function main(params)
 
   -- We don't need the base CNN anymore, so clean it up to save memory.
   cnn = nil
+  for i=1,#net.modules do
+    local module = net.modules[i]
+    if torch.type(module) == 'nn.SpatialConvolutionMM' then
+        -- remote these, not used, but uses gpu memory
+        module.gradWeight = nil
+        module.gradBias = nil
+    end
+  end
   collectgarbage()
   
   -- Initialize the image
