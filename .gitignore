@@ -4,3 +4,5 @@ out*.png
 *.jpg
 *.prototxt*
 *.caffemodel
+models/
+!models/download_models.sh
