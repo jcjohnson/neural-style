@@ -44,10 +44,6 @@ cmd:option('-seed', -1)
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 
-function nn.SpatialConvolutionMM:accGradParameters()
-  -- nop.  not needed by our net
-end
-
 local function main(params)
   if params.gpu >= 0 then
     require 'cutorch'
@@ -55,11 +51,6 @@ local function main(params)
     cutorch.setDevice(params.gpu + 1)
   else
     params.backend = 'nn-cpu'
-  end
-
-  if params.backend == 'cudnn' then
-    require 'cudnn'
-    cudnn.SpatialConvolution.accGradParameters = nn.SpatialConvolutionMM.accGradParameters -- ie: nop
   end
   
   local cnn = loadcaffe_wrap.load(params.proto_file, params.model_file, params.backend):float()
@@ -272,7 +263,7 @@ local function main(params)
   local function feval(x)
     num_calls = num_calls + 1
     net:forward(x)
-    local grad = net:backward(x, dy)
+    local grad = net:updateGradInput(x, dy)
     local loss = 0
     for _, mod in ipairs(content_losses) do
       loss = loss + mod.loss
