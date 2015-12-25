@@ -39,6 +39,7 @@ cmd:option('-pooling', 'max', 'max|avg')
 cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
 cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
 cmd:option('-backend', 'nn', 'nn|cudnn|clnn')
+cmd:option('-cudnn_autotune', false)
 cmd:option('-seed', -1)
 
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
@@ -56,11 +57,14 @@ local function main(params)
       cltorch.setDevice(params.gpu + 1)
     end
   else
-    params.backend = 'nn-cpu'
+    params.backend = 'nn'
   end
 
   if params.backend == 'cudnn' then
     require 'cudnn'
+    if params.cudnn_autotune then
+      cudnn.benchmark = true
+    end
     cudnn.SpatialConvolution.accGradParameters = nn.SpatialConvolutionMM.accGradParameters -- ie: nop
   end
   
