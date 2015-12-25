@@ -100,6 +100,9 @@ Dependencies:
 Optional dependencies:
 * CUDA 6.5+
 * [cudnn.torch](https://github.com/soumith/cudnn.torch)
+* OpenCL libraries
+* [cltorch](https://github.com/hughperkins/clnn)
+* [clnn](https://github.com/hughperkins/cltorch)
 
 After installing dependencies, you'll need to run the following script to download the VGG model:
 ```
@@ -109,6 +112,8 @@ This will download the original [VGG-19 model](https://gist.github.com/ksimonyan
 Leon Gatys has graciously provided the modified version of the VGG-19 model that was used in their paper;
 this will also be downloaded. By default the original VGG-19 model is used.
 
+If you have a smaller memory GPU then using NIN Imagenet model will be better and gives slightly worse yet comparable results. You can get the details on the model from [BVLC Caffe ModelZoo](https://github.com/BVLC/caffe/wiki/Model-Zoo) and can download the files from [NIN-Imagenet Download Link](https://drive.google.com/folderview?id=0B0IedYUunOQINEFtUi1QNWVhVVU&usp=drive_web)
+
 You can find detailed installation instructions for Ubuntu in the [installation guide](INSTALL.md).
 
 ## Usage
@@ -116,6 +121,14 @@ Basic usage:
 ```
 th neural_style.lua -style_image <image.jpg> -content_image <image.jpg>
 ```
+
+OpenCL usage with NIN Model (This requires you download the NIN Imagenet model files as described above):
+```
+th neural_style.lua -style_image examples/inputs/picasso_selfport1907.jpg -content_image examples/inputs/brad_pitt.jpg -output_image profile.png -model_file models/nin_imagenet_conv.caffemodel -proto_file models/train_val.prototxt -gpu 0 -backend clnn -num_iterations 1000 -seed 123 -content_layers relu0,relu3,relu7,relu12 -style_layers relu0,relu3,relu7,relu12 -content_weight 10 -style_weight 1000 -image_size 512 -optimizer adam
+```
+
+![OpenCL NIN Model Picasso Brad Pitt](/examples/outputs/pitt_picasso_nin_opencl.png)
+
 
 To use multiple style images, pass a comma-separated list like this:
 
@@ -166,8 +179,9 @@ To use multiple style images, pass a comma-separated list like this:
   The VGG-19 models uses max pooling layers, but the paper mentions that replacing these layers with average
   pooling layers can improve the results. I haven't been able to get good results using average pooling, but
   the option is here.
-* `-backend`: `nn` or `cudnn`. Default is `nn`. `cudnn` requires
+* `-backend`: `nn`, `cudnn`, or `clnn`. Default is `nn`. `cudnn` requires
   [cudnn.torch](https://github.com/soumith/cudnn.torch) and may reduce memory usage.
+  `clnn` requires [cltorch](https://github.com/hughperkins/cltorch) and [clnn](https://github.com/hughperkins/clnn)
 
 ## Frequently Asked Questions
 
@@ -197,6 +211,10 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 **Problem:** Get an error message complaining about `paths.extname`
 
 **Solution:** Update `torch.paths` package to the latest version: `luarocks install paths`
+
+**Problem:** NIN Imagenet model is not giving good results. 
+
+**Solution:** Make sure the correct `-proto_file` is selected. Also make sure the correct parameters for `-content_layers` and `-style_layers` are set. (See OpenCL usage example above.)
 
 ## Memory Usage
 By default, `neural-style` uses the `nn` backend for convolutions and L-BFGS for optimization.
