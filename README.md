@@ -98,11 +98,14 @@ Dependencies:
 * [loadcaffe](https://github.com/szagoruyko/loadcaffe)
 
 Optional dependencies:
-* CUDA 6.5+
-* [cudnn.torch](https://github.com/soumith/cudnn.torch)
-* OpenCL libraries
-* [cltorch](https://github.com/hughperkins/clnn)
-* [clnn](https://github.com/hughperkins/cltorch)
+* For CUDA backend:
+  * CUDA 6.5+
+  * [cunn](https://github.com/torch/cunn)
+* For cuDNN backend:
+  * [cudnn.torch](https://github.com/soumith/cudnn.torch)
+* For OpenCL backend:
+  * [cltorch](https://github.com/hughperkins/clnn)
+  * [clnn](https://github.com/hughperkins/cltorch)
 
 After installing dependencies, you'll need to run the following script to download the VGG model:
 ```
