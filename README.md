@@ -185,6 +185,9 @@ To use multiple style images, pass a comma-separated list like this:
 * `-backend`: `nn`, `cudnn`, or `clnn`. Default is `nn`. `cudnn` requires
   [cudnn.torch](https://github.com/soumith/cudnn.torch) and may reduce memory usage.
   `clnn` requires [cltorch](https://github.com/hughperkins/cltorch) and [clnn](https://github.com/hughperkins/clnn)
+* `cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
+  the best convolution algorithms for your architecture. This will make the first iteration a bit slower and can
+  take a bit more memory, but may significantly speed up the cuDNN backend.
 
 ## Frequently Asked Questions
 
@@ -219,6 +222,10 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Solution:** Make sure the correct `-proto_file` is selected. Also make sure the correct parameters for `-content_layers` and `-style_layers` are set. (See OpenCL usage example above.)
 
+**Problem:** `-backend cudnn` is slower than default NN backend
+
+**Solution:** Add the flag `-cudnn_autotune`; this will use the built-in cuDNN autotuner to select the best convolution algorithms.
+
 ## Memory Usage
 By default, `neural-style` uses the `nn` backend for convolutions and L-BFGS for optimization.
 These give good results, but can both use a lot of memory. You can reduce memory usage with the following:
@@ -235,10 +242,15 @@ With the default settings, `neural-style` uses about 3.5GB of GPU memory on my s
 switching to ADAM and cuDNN reduces the GPU memory footprint to about 1GB.
 
 ## Speed
-On a GTX Titan X, running 1000 iterations of gradient descent with `-image_size=512` takes about 2 minutes.
-In CPU mode on an Intel Core i7-4790k, running the same takes around 40 minutes.
-Most of the examples shown here were run for 2000 iterations, but with a bit of parameter tuning most images will
-give good results within 1000 iterations.
+Speed can vary a lot depending on the backend and the optimizer.
+Here are some times for running 500 iterations with `-image_size=512` on a GTX Titan X with different settings:
+* `-backend nn -optimizer lbfgs`: 62 seconds
+* `-backend nn -optimizer adam`: 49 seconds
+* `-backend cudnn -optimizer lbfgs`: 79 seconds
+* `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 58 seconds
+* `-backend cudnn -cudnn_autotune -optimizer adam`: 44 seconds
+* `-backend clnn -optimizer lbfgs`: 169 seconds
+* `-backend clnn -optimizer adam`: 106 seconds 
 
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
