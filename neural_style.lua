@@ -49,8 +49,6 @@ local function main(params)
     require 'cutorch'
     require 'cunn'
     cutorch.setDevice(params.gpu + 1)
-  else
-    params.backend = 'nn-cpu'
   end
   
   local cnn = loadcaffe.load(params.proto_file, params.model_file, params.backend):float()
