@@ -185,7 +185,7 @@ To use multiple style images, pass a comma-separated list like this:
 * `-backend`: `nn`, `cudnn`, or `clnn`. Default is `nn`. `cudnn` requires
   [cudnn.torch](https://github.com/soumith/cudnn.torch) and may reduce memory usage.
   `clnn` requires [cltorch](https://github.com/hughperkins/cltorch) and [clnn](https://github.com/hughperkins/clnn)
-* `cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
+* `-cudnn_autotune`: When using the cuDNN backend, pass this flag to use the built-in cuDNN autotuner to select
   the best convolution algorithms for your architecture. This will make the first iteration a bit slower and can
   take a bit more memory, but may significantly speed up the cuDNN backend.
 
