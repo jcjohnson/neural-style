@@ -232,7 +232,7 @@ local function main(params)
   for i=1,#net.modules do
     local module = net.modules[i]
     if torch.type(module) == 'nn.SpatialConvolutionMM' then
-        -- remote these, not used, but uses gpu memory
+        -- remove these, not used, but uses gpu memory
         module.gradWeight = nil
         module.gradBias = nil
     end
