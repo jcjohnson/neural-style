@@ -62,7 +62,7 @@ sh models/download_models.sh
 You should now be able to run `neural-style` in CPU mode like this:
 
 ```
-th neural_style.lua -gpu -1 -print_iter -1
+th neural_style.lua -gpu -1 -print_iter 1
 ```
 
 If everything is working properly you should see output like this:
