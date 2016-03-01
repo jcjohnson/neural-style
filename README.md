@@ -104,8 +104,8 @@ Optional dependencies:
 * For cuDNN backend:
   * [cudnn.torch](https://github.com/soumith/cudnn.torch)
 * For OpenCL backend:
-  * [cltorch](https://github.com/hughperkins/clnn)
-  * [clnn](https://github.com/hughperkins/cltorch)
+  * [cltorch](https://github.com/hughperkins/cltorch)
+  * [clnn](https://github.com/hughperkins/clnn)
 
 After installing dependencies, you'll need to run the following script to download the VGG model:
 ```
