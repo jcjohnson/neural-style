@@ -137,6 +137,9 @@ To use multiple style images, pass a comma-separated list like this:
 
 `-style_image starry_night.jpg,the_scream.jpg`.
 
+Note that paths to images should not contain the `~` character to represent your home directory; you should instead use a relative
+path or a full absolute path.
+
 **Options**:
 * `-image_size`: Maximum side length (in pixels) of of the generated image. Default is 512.
 * `-style_blend_weights`: The weight for blending the style of multiple style images, as a
