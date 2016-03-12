@@ -74,7 +74,11 @@ local function main(params)
      require 'loadcaffe'
      cnn = loadcaffe.load(params.proto_file, params.model_file, loadcaffe_backend)
   else
-     cnn = torch.load(params.model_file):unpack()
+     cnn = torch.load(params.model_file)
+     if cnn.unpack then cnn = cnn:unpack() end
+     if params.backend == 'cudnn' then
+        cudnn.convert(cnn, cudnn)
+     end
   end
   cnn:float()
   if params.gpu >= 0 then
@@ -163,7 +167,7 @@ local function main(params)
   for i = 1, #cnn do
     if next_content_idx <= #content_layers or next_style_idx <= #style_layers then
       local layer = cnn:get(i)
-      local name = layer.name
+      local name = is_caffemodel and layer.name or tostring(i)
       local layer_type = torch.type(layer)
       local is_pooling = (layer_type == 'cudnn.SpatialMaxPooling' or layer_type == 'nn.SpatialMaxPooling')
       if is_pooling and params.pooling == 'avg' then
@@ -239,7 +243,7 @@ local function main(params)
   end
 
   -- We don't need the base CNN anymore, so clean it up to save memory.
-  cnn = nil
+  -- cnn = nil
   for i=1,#net.modules do
     local module = net.modules[i]
     if torch.type(module) == 'nn.SpatialConvolutionMM' then
@@ -273,7 +277,6 @@ local function main(params)
   -- Run it through the network once to get the proper size for the gradient
   -- All the gradients will come from the extra loss modules, so we just pass
   -- zeros into the top of the net on the backward pass.
-  require'fb.debugger'.enter() 
   local y = net:forward(img)
   local dy = img.new(#y):zero()
 
