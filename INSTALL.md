@@ -135,7 +135,10 @@ http://developer.download.nvidia.com/compute/cuda/7_0/Prod/local_installers/rpmd
 sudo dpkg -i cuda-repo-ubuntu1204-7-0-local_7.0-28_amd64.deb
 ```
 
+[CUDA installers for other platforms](https://developer.nvidia.com/cuda-downloads)
+
 Now update the repository cache and install CUDA. Note that this will also install a graphics driver from NVIDIA.
+
 
 ```
 sudo apt-get update
