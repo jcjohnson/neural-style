@@ -118,6 +118,12 @@ First download and unpack the local CUDA installer from NVIDIA; note that there 
 installers for each recent version of Ubuntu:
 
 ```
+# For Ubuntu 15.04
+wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda-repo-ubuntu1504-7-5-local_7.5-18_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu1504-7-5-local_7.5-18_amd64.deb
+```
+
+```
 # For Ubuntu 14.10
 wget http://developer.download.nvidia.com/compute/cuda/7_0/Prod/local_installers/rpmdeb/cuda-repo-ubuntu1410-7-0-local_7.0-28_amd64.deb
 sudo dpkg -i cuda-repo-ubuntu1410-7-0-local_7.0-28_amd64.deb
