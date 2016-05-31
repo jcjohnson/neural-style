@@ -90,6 +90,14 @@ When using multiple style images, you can control the degree to which they are b
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scream_5_5.png" height="175px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scream_7_3.png" height="175px">
 
+### Relative style layer weights
+
+It is possible to adjust the relative weights of style layers giving a comma separated list of multipliers (actual style weight of each layer will then be style_layer_weight * style_weight.
+
+```th neural_style.lua -gpu -1 style_layer_weights 1,1,0.1,2,15 ....
+
+
+
 
 ## Setup:
 
@@ -175,6 +183,8 @@ path or a full absolute path.
   Default is `relu4_2`.
 * `-style_layers`: Comman-separated list of layer names to use for style reconstruction.
   Default is `relu1_1,relu2_1,relu3_1,relu4_1,relu5_1`.
+* `-style_layer_weights`: Comma-separated list of weight multipliers to adjust relative weight of style layers.
+  If parameter is not given, all style layers will have relative weight = 1.
 
 **Other options**:
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
