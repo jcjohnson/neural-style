@@ -94,8 +94,9 @@ When using multiple style images, you can control the degree to which they are b
 
 It is possible to adjust the relative weights of style layers giving a comma separated list of multipliers (actual style weight of each layer will then be style_layer_weight * style_weight.
 
-```th neural_style.lua -gpu -1 style_layer_weights 1,1,0.1,2,15 ....
-
+```
+th neural_style.lua -gpu -1 style_layer_weights 1,1,0.1,2,15 
+```
 
 
 
