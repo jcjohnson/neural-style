@@ -44,6 +44,7 @@ cmd:option('-seed', -1)
 
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
+cmd:option('-style_layer_weights', 'nil')
 
 local function main(params)
   if params.gpu >= 0 then
@@ -93,6 +94,9 @@ local function main(params)
     table.insert(style_images_caffe, img_caffe)
   end
 
+
+ 
+
   -- Handle style blending weights for multiple style inputs
   local style_blend_weights = nil
   if params.style_blend_weights == 'nil' then
@@ -133,6 +137,17 @@ local function main(params)
   
   local content_layers = params.content_layers:split(",")
   local style_layers = params.style_layers:split(",")
+
+  local style_layer_weights = {}
+    if params.style_layer_weights == 'nil' then
+      for i = 1, #style_layers do
+       table.insert(style_layer_weights, 1)
+      end
+   else
+     style_layer_weights = params.style_layer_weights:split(',')
+     assert(#style_layer_weights == #style_layers,
+      '-style_layer_weights and -style_layers must have the same number of elements')
+   end 
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
@@ -212,7 +227,7 @@ local function main(params)
           end
         end
         local norm = params.normalize_gradients
-        local loss_module = nn.StyleLoss(params.style_weight, target, norm):float()
+        local loss_module = nn.StyleLoss(params.style_weight * tonumber(style_layer_weights[next_style_idx]), target, norm):float()
         if params.gpu >= 0 then
           if params.backend ~= 'clnn' then
             loss_module:cuda()
