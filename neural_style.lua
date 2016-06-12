@@ -5,7 +5,6 @@ require 'optim'
 
 require 'loadcaffe'
 
---------------------------------------------------------------------------------
 
 local cmd = torch.CmdLine()
 
@@ -35,6 +34,7 @@ cmd:option('-output_image', 'out.png')
 
 -- Other options
 cmd:option('-style_scale', 1.0)
+cmd:option('-original_colors', 0)
 cmd:option('-pooling', 'max', 'max|avg')
 cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
 cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
@@ -304,6 +304,12 @@ local function main(params)
       if t == params.num_iterations then
         filename = params.output_image
       end
+
+      -- Maybe perform postprocessing for color-independent style transfer
+      if params.original_colors == 1 then
+        disp = original_colors(content_image, disp)
+      end
+
       image.save(filename, disp)
     end
   end
@@ -375,6 +381,15 @@ function deprocess(img)
   local perm = torch.LongTensor{3, 2, 1}
   img = img:index(1, perm):div(256.0)
   return img
+end
+
+
+-- Combine the Y channel of the generated image and the UV channels of the
+-- content image to perform color-independent style transfer.
+function original_colors(content, generated)
+  local generated_y = image.rgb2yuv(generated)[{{1, 1}}]
+  local content_uv = image.rgb2yuv(content)[{{2, 3}}]
+  return image.yuv2rgb(torch.cat(generated_y, content_uv, 1))
 end
 
 
