@@ -91,6 +91,19 @@ When using multiple style images, you can control the degree to which they are b
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scream_7_3.png" height="175px">
 
 
+### Transfer style but not color
+If you add the flag `-original_colors 1` then the output image will retain the colors of the original image;
+this is similar to [the recent blog post by deepart.io](http://blog.deepart.io/2016/06/04/color-independent-style-transfer/).
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_starry.png" height="185px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_scream.png" height="185px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_composition_vii.png" height="185px">
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/original_color/tubingen_starry.png" height="185px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/original_color/tubingen_scream.png" height="185px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/original_color/tubingen_composition_vii.png" height="185px">
+
+
 ## Setup:
 
 Dependencies:
@@ -178,6 +191,7 @@ path or a full absolute path.
 
 **Other options**:
 * `-style_scale`: Scale at which to extract features from the style image. Default is 1.0.
+* `-original_colors`: If you set this to 1, then the output image will keep the colors of the content image.
 * `-proto_file`: Path to the `deploy.txt` file for the VGG Caffe model.
 * `-model_file`: Path to the `.caffemodel` file for the VGG Caffe model.
   Default is the original VGG-19 model; you can also try the normalized VGG-19 model used in the paper.
