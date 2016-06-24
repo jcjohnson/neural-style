@@ -186,7 +186,7 @@ path or a full absolute path.
 **Layer options**:
 * `-content_layers`: Comma-separated list of layer names to use for content reconstruction.
   Default is `relu4_2`.
-* `-style_layers`: Comman-separated list of layer names to use for style reconstruction.
+* `-style_layers`: Comma-separated list of layer names to use for style reconstruction.
   Default is `relu1_1,relu2_1,relu3_1,relu4_1,relu5_1`.
 
 **Other options**:
