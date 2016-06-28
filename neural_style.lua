@@ -2,7 +2,6 @@ require 'torch'
 require 'nn'
 require 'image'
 require 'optim'
-
 require 'loadcaffe'
 
 
@@ -12,6 +11,7 @@ local cmd = torch.CmdLine()
 cmd:option('-style_image', 'examples/inputs/seated-nude.jpg',
            'Style target image')
 cmd:option('-style_blend_weights', 'nil')
+cmd:option('-use_raw_blend_weights', false, 'turns off normalization of multiple blend weights; set to false if using negative weights to avoid style blowout')
 cmd:option('-content_image', 'examples/inputs/tubingen.jpg',
            'Content target image')
 cmd:option('-image_size', 512, 'Maximum height / width of generated image')
@@ -106,14 +106,17 @@ local function main(params)
     assert(#style_blend_weights == #style_image_list,
       '-style_blend_weights and -style_images must have the same number of elements')
   end
+
   -- Normalize the style blending weights so they sum to 1
-  local style_blend_sum = 0
-  for i = 1, #style_blend_weights do
-    style_blend_weights[i] = tonumber(style_blend_weights[i])
-    style_blend_sum = style_blend_sum + style_blend_weights[i]
-  end
-  for i = 1, #style_blend_weights do
-    style_blend_weights[i] = style_blend_weights[i] / style_blend_sum
+  if not params.use_raw_blend_weights then
+     local style_blend_sum = 0
+     for i = 1, #style_blend_weights do
+	style_blend_weights[i] = tonumber(style_blend_weights[i])
+	style_blend_sum = style_blend_sum + style_blend_weights[i]
+     end
+     for i = 1, #style_blend_weights do
+	style_blend_weights[i] = style_blend_weights[i] / style_blend_sum
+     end
   end
   
 
