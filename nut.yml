@@ -2,6 +2,7 @@ syntax_version: "7"
 project_name: neural-style
 docker_image: matthieudelaro/cuda-torch-plus
 container_working_directory: /opt/style
+enable_nvidia_devices: true
 volumes:
   main:
     host_path: .
@@ -13,7 +14,6 @@ macros:
     - sh ./models/download_models.sh
   run:
     usage: run the neural network in the container, on GPU
-    enable_nvidia_devices: true
     actions:
     - export iterations=1000
     - time th neural_style.lua -num_iterations $iterations -seed 123 -style_image style_image.jpg -content_image content_image.jpg -output_image "output_image_`date '+%Y-%m-%d_%Hh%Mmin%S'`.png"
