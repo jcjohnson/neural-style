@@ -250,7 +250,7 @@ local function main(params)
     img = content_image_caffe:clone():float()
   else
     -- Read other init arguments as path to initial image
-    local alternate_initial_image = image.load(params.alternate_initial_image, 3)
+    local alternate_initial_image = image.load(params.init, 3)
     alternate_initial_image = image.scale(alternate_initial_image, params.image_size, 'bilinear')
     img = preprocess(alternate_initial_image):float()
   end
