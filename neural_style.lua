@@ -249,7 +249,10 @@ local function main(params)
   elseif params.init == 'image' then
     img = content_image_caffe:clone():float()
   else
-    error('Invalid init type')
+    -- Read other init arguments as path to initial image
+    local alternate_initial_image = image.load(params.alternate_initial_image, 3)
+    alternate_initial_image = image.scale(alternate_initial_image, params.image_size, 'bilinear')
+    img = preprocess(alternate_initial_image):float()
   end
   if params.gpu >= 0 then
     if params.backend ~= 'clnn' then
