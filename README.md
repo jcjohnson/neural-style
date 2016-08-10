@@ -260,7 +260,7 @@ switching to ADAM and cuDNN reduces the GPU memory footprint to about 1GB.
 
 ## Speed
 Speed can vary a lot depending on the backend and the optimizer.
-Here are some times for running 500 iterations with `-image_size=512` on a GTX Titan X with different settings:
+Here are some times for running 500 iterations with `-image_size=512` on a Maxwell Titan X with different settings:
 * `-backend nn -optimizer lbfgs`: 62 seconds
 * `-backend nn -optimizer adam`: 49 seconds
 * `-backend cudnn -optimizer lbfgs`: 79 seconds
@@ -268,6 +268,13 @@ Here are some times for running 500 iterations with `-image_size=512` on a GTX T
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 44 seconds
 * `-backend clnn -optimizer lbfgs`: 169 seconds
 * `-backend clnn -optimizer adam`: 106 seconds 
+
+Here are the same benchmarks on a Pascal Titan X with cuDNN 5.0 on CUDA 8.0 RC:
+* `-backend nn -optimizer lbfgs`: 43 seconds
+* `-backend nn -optimizer adam`: 36 seconds
+* `-backend cudnn -optimizer lbfgs`: 45 seconds
+* `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 30 seconds
+* `-backend cudnn -cudnn_autotune -optimizer adam`: 22 seconds
 
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
