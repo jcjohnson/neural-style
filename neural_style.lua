@@ -316,7 +316,7 @@ local function main(params)
 
   -- Function to evaluate loss and gradient. We run the net forward and
   -- backward to get the gradient, and sum up losses from the loss modules.
-  -- optim.lbfgs internally handles iteration and calls this fucntion many
+  -- optim.lbfgs internally handles iteration and calls this function many
   -- times, so we manually count the number of iterations to handle printing
   -- and saving intermediate results.
   local num_calls = 0
