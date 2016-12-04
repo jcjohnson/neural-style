@@ -24,6 +24,7 @@ cmd:option('-tv_weight', 1e-3)
 cmd:option('-num_iterations', 1000)
 cmd:option('-normalize_gradients', false)
 cmd:option('-init', 'random', 'random|image')
+cmd:option('-init_image', '')
 cmd:option('-optimizer', 'lbfgs', 'lbfgs|adam')
 cmd:option('-learning_rate', 1e1)
 
@@ -91,6 +92,14 @@ local function main(params)
     img = image.scale(img, style_size, 'bilinear')
     local img_caffe = preprocess(img):float()
     table.insert(style_images_caffe, img_caffe)
+  end
+
+  local init_image = nil
+  if params.init_image ~= '' then
+    init_image = image.load(params.init_image, 3)
+    local H, W = content_image:size(2), content_image:size(3)
+    init_image = image.scale(init_image, W, H, 'bilinear')
+    init_image = preprocess(init_image):float()
   end
 
   -- Handle style blending weights for multiple style inputs
@@ -247,7 +256,11 @@ local function main(params)
   if params.init == 'random' then
     img = torch.randn(content_image:size()):float():mul(0.001)
   elseif params.init == 'image' then
-    img = content_image_caffe:clone():float()
+    if init_image then
+      img = init_image:clone():float()
+    else
+      img = content_image_caffe:clone():float()
+    end
   else
     error('Invalid init type')
   end
@@ -271,6 +284,7 @@ local function main(params)
     optim_state = {
       maxIter = params.num_iterations,
       verbose=true,
+      tolX=0,
     }
   elseif params.optimizer == 'adam' then
     optim_state = {
