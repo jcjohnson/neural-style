@@ -28,6 +28,7 @@ cmd:option('-init', 'random', 'random|image')
 cmd:option('-init_image', '')
 cmd:option('-optimizer', 'lbfgs', 'lbfgs|adam')
 cmd:option('-learning_rate', 1e1)
+cmd:option('-lbfgs_num_correction', 0)
 
 -- Output options
 cmd:option('-print_iter', 50)
@@ -227,6 +228,9 @@ local function main(params)
       verbose=true,
       tolX=0,
     }
+    if params.lbfgs_num_correction > 0 then
+      optim_state.nCorrection = params.lbfgs_num_correction
+    end
   elseif params.optimizer == 'adam' then
     optim_state = {
       learningRate = params.learning_rate,
