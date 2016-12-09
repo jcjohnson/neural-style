@@ -226,7 +226,8 @@ local function main(params)
     optim_state = {
       maxIter = params.num_iterations,
       verbose=true,
-      tolX=0,
+      tolX=-1,
+      tolFun=-1,
     }
     if params.lbfgs_num_correction > 0 then
       optim_state.nCorrection = params.lbfgs_num_correction
