@@ -368,7 +368,7 @@ function setup_multi_gpu(net, params)
     end
   else
     -- Use the user-specified multigpu strategy
-    gpu_splits = params.multigpu_splits:split(',')
+    gpu_splits = params.multigpu_strategy:split(',')
     for i = 1, #gpu_splits do
       gpu_splits[i] = tonumber(gpu_splits[i])
     end
