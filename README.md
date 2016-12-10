@@ -8,9 +8,9 @@ convolutional neural networks. Here's an example that maps the artistic style of
 [The Starry Night](https://en.wikipedia.org/wiki/The_Starry_Night)
 onto a night-time photograph of the Stanford campus:
 
-<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/starry_night.jpg" height="200px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/starry_night_google.jpg" height="200px">
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/hoovertowernight.jpg" height="200px">
-<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/starry_stanford_big_2.png" width="706px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/starry_stanford_bigger.png" width="706px">
 
 Applying the style of different images to the same content image gives interesting results.
 Here we reproduce Figure 2 from the paper, which renders a photograph of the Tubingen in Germany in a
@@ -65,9 +65,9 @@ features that are transfered from the style image; you can control this behavior
 Below we see three examples of rendering the Golden Gate Bridge in the style of The Starry Night.
 From left to right, `-style_scale` is 2.0, 1.0, and 0.5.
 
-<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale2.png" height=175px">
-<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale1.png" height=175px">
-<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale05.png" height=175px">
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale2.png" height=175px>
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale1.png" height=175px>
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/golden_gate_starry_scale05.png" height=175px>
 
 ### Multiple Style Images
 You can use more than one style image to blend multiple artistic styles.
@@ -275,6 +275,28 @@ Here are the same benchmarks on a Pascal Titan X with cuDNN 5.0 on CUDA 8.0 RC:
 * `-backend cudnn -optimizer lbfgs`: 45 seconds
 * `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 30 seconds
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 22 seconds
+
+## Multi-GPU scaling
+You can use multiple GPUs to process images at higher resolutions; different layers of the network will be
+computed on different GPUs. You can control which GPUs are used with the `-gpu` flag, and you can control
+how to split layers across GPUs using the `-multigpu_strategy` flag.
+
+For example in a server with four GPUs, you can give the flag `-gpu 0,1,2,3` to process on GPUs 0, 1, 2, and
+3 in that order; by also giving the flag `-multigpu_strategy 3,6,12` you indicate that the first two layers
+should be computed on GPU 0, layers 3 to 5 should be computed on GPU 1, layers 6 to 11 should be computed on
+GPU 2, and the remaining layers should be computed on GPU 3. You will need to tune the `-multigpu_strategy`
+for your setup in order to achieve maximal resolution.
+
+We can achieve very high quality results at high resolution by combining multi-GPU processing with multiscale
+generation as described in the paper
+<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys, 
+Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
+
+Here is a 3620 x 1905 image generated on a server with four Pascal Titan X GPUs:
+
+<img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/starry_stanford_bigger.png" height="400px">
+
+The script used to generate this image <a href='examples/multigpu_scripts/starry_stanford.sh'>can be found here</a>.
 
 ## Implementation details
 Images are initialized with white noise and optimized using L-BFGS.
