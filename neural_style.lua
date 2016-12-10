@@ -146,9 +146,6 @@ local function main(params)
       end
     end
   end
-  for i = 1, #net do
-    print(net:get(i), net:get(i).inplace)
-  end
   if multigpu then
     net = setup_multi_gpu(net, params)
   end
@@ -324,7 +321,7 @@ function setup_gpu(params)
     params.gpu = tonumber(params.gpu) + 1
   end
   local dtype = 'torch.FloatTensor'
-  if multigpu or params.gpu >= 0 then
+  if multigpu or params.gpu > 0 then
     if params.backend ~= 'clnn' then
       require 'cutorch'
       require 'cunn'
