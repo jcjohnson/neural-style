@@ -131,6 +131,7 @@ local function main(params)
       end
       if name == content_layers[next_content_idx] then
         print("Setting up content layer", i, ":", layer.name)
+        local norm = params.normalize_gradients
         local loss_module = nn.ContentLoss(params.content_weight, norm):type(dtype)
         net:add(loss_module)
         table.insert(content_losses, loss_module)
@@ -399,7 +400,6 @@ function setup_multi_gpu(net, params)
     end
     new_net:add(nn.GPU(chunks[i], gpus[i], out_device))
   end
-  print(new_net)
 
   return new_net
 end
@@ -449,7 +449,7 @@ end
 -- Define an nn Module to compute content loss in-place
 local ContentLoss, parent = torch.class('nn.ContentLoss', 'nn.Module')
 
-function ContentLoss:__init(strength, target, normalize)
+function ContentLoss:__init(strength, normalize)
   parent.__init(self)
   self.strength = strength
   self.target = torch.Tensor()
