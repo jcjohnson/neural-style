@@ -5,7 +5,6 @@ require 'optim'
 
 require 'loadcaffe'
 
---------------------------------------------------------------------------------
 
 local cmd = torch.CmdLine()
 
@@ -16,7 +15,8 @@ cmd:option('-style_blend_weights', 'nil')
 cmd:option('-content_image', 'examples/inputs/tubingen.jpg',
            'Content target image')
 cmd:option('-image_size', 512, 'Maximum height / width of generated image')
-cmd:option('-gpu', 0, 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
+cmd:option('-gpu', '0', 'Zero-indexed ID of the GPU to use; for CPU mode set -gpu = -1')
+cmd:option('-multigpu_strategy', '', 'Index of layers to split the network across GPUs')
 
 -- Optimization options
 cmd:option('-content_weight', 5e0)
@@ -25,8 +25,10 @@ cmd:option('-tv_weight', 1e-3)
 cmd:option('-num_iterations', 1000)
 cmd:option('-normalize_gradients', false)
 cmd:option('-init', 'random', 'random|image')
+cmd:option('-init_image', '')
 cmd:option('-optimizer', 'lbfgs', 'lbfgs|adam')
 cmd:option('-learning_rate', 1e1)
+cmd:option('-lbfgs_num_correction', 0)
 
 -- Output options
 cmd:option('-print_iter', 50)
@@ -35,6 +37,7 @@ cmd:option('-output_image', 'out.png')
 
 -- Other options
 cmd:option('-style_scale', 1.0)
+cmd:option('-original_colors', 0)
 cmd:option('-pooling', 'max', 'max|avg')
 cmd:option('-proto_file', 'models/VGG_ILSVRC_19_layers_deploy.prototxt')
 cmd:option('-model_file', 'models/VGG_ILSVRC_19_layers.caffemodel')
@@ -46,44 +49,18 @@ cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 cmd:option('-style_layer_weights', 'nil')
 
-local function main(params)
-  if params.gpu >= 0 then
-    if params.backend ~= 'clnn' then
-      require 'cutorch'
-      require 'cunn'
-      cutorch.setDevice(params.gpu + 1)
-    else
-      require 'clnn'
-      require 'cltorch'
-      cltorch.setDevice(params.gpu + 1)
-    end
-  else
-    params.backend = 'nn'
-  end
 
-  if params.backend == 'cudnn' then
-    require 'cudnn'
-    if params.cudnn_autotune then
-      cudnn.benchmark = true
-    end
-    cudnn.SpatialConvolution.accGradParameters = nn.SpatialConvolutionMM.accGradParameters -- ie: nop
-  end
-  
+local function main(params)
+  local dtype, multigpu = setup_gpu(params)
+
   local loadcaffe_backend = params.backend
   if params.backend == 'clnn' then loadcaffe_backend = 'nn' end
-  local cnn = loadcaffe.load(params.proto_file, params.model_file, loadcaffe_backend):float()
-  if params.gpu >= 0 then
-    if params.backend ~= 'clnn' then
-      cnn:cuda()
-    else
-      cnn:cl()
-    end
-  end
-  
+  local cnn = loadcaffe.load(params.proto_file, params.model_file, loadcaffe_backend):type(dtype)
+
   local content_image = image.load(params.content_image, 3)
   content_image = image.scale(content_image, params.image_size, 'bilinear')
   local content_image_caffe = preprocess(content_image):float()
-  
+
   local style_size = math.ceil(params.style_scale * params.image_size)
   local style_image_list = params.style_image:split(',')
   local style_images_caffe = {}
@@ -94,8 +71,18 @@ local function main(params)
     table.insert(style_images_caffe, img_caffe)
   end
 
+<<<<<<< HEAD
 
  
+=======
+  local init_image = nil
+  if params.init_image ~= '' then
+    init_image = image.load(params.init_image, 3)
+    local H, W = content_image:size(2), content_image:size(3)
+    init_image = image.scale(init_image, W, H, 'bilinear')
+    init_image = preprocess(init_image):float()
+  end
+>>>>>>> jcjohnson/master
 
   -- Handle style blending weights for multiple style inputs
   local style_blend_weights = nil
@@ -119,22 +106,7 @@ local function main(params)
   for i = 1, #style_blend_weights do
     style_blend_weights[i] = style_blend_weights[i] / style_blend_sum
   end
-  
 
-  if params.gpu >= 0 then
-    if params.backend ~= 'clnn' then
-      content_image_caffe = content_image_caffe:cuda()
-      for i = 1, #style_images_caffe do
-        style_images_caffe[i] = style_images_caffe[i]:cuda()
-      end
-    else
-      content_image_caffe = content_image_caffe:cl()
-      for i = 1, #style_images_caffe do
-        style_images_caffe[i] = style_images_caffe[i]:cl()
-      end
-    end
-  end
-  
   local content_layers = params.content_layers:split(",")
   local style_layers = params.style_layers:split(",")
 
@@ -154,14 +126,7 @@ local function main(params)
   local next_content_idx, next_style_idx = 1, 1
   local net = nn.Sequential()
   if params.tv_weight > 0 then
-    local tv_mod = nn.TVLoss(params.tv_weight):float()
-    if params.gpu >= 0 then
-      if params.backend ~= 'clnn' then
-        tv_mod:cuda()
-      else
-        tv_mod:cl()
-      end
-    end
+    local tv_mod = nn.TVLoss(params.tv_weight):type(dtype)
     net:add(tv_mod)
   end
   for i = 1, #cnn do
@@ -174,14 +139,7 @@ local function main(params)
         assert(layer.padW == 0 and layer.padH == 0)
         local kW, kH = layer.kW, layer.kH
         local dW, dH = layer.dW, layer.dH
-        local avg_pool_layer = nn.SpatialAveragePooling(kW, kH, dW, dH):float()
-        if params.gpu >= 0 then
-          if params.backend ~= 'clnn' then
-            avg_pool_layer:cuda()
-          else
-            avg_pool_layer:cl()
-          end
-        end
+        local avg_pool_layer = nn.SpatialAveragePooling(kW, kH, dW, dH):type(dtype)
         local msg = 'Replacing max pooling at layer %d with average pooling'
         print(string.format(msg, i))
         net:add(avg_pool_layer)
@@ -190,43 +148,16 @@ local function main(params)
       end
       if name == content_layers[next_content_idx] then
         print("Setting up content layer", i, ":", layer.name)
-        local target = net:forward(content_image_caffe):clone()
         local norm = params.normalize_gradients
-        local loss_module = nn.ContentLoss(params.content_weight, target, norm):float()
-        if params.gpu >= 0 then
-          if params.backend ~= 'clnn' then
-            loss_module:cuda()
-          else
-            loss_module:cl()
-          end
-        end
+        local loss_module = nn.ContentLoss(params.content_weight, norm):type(dtype)
         net:add(loss_module)
         table.insert(content_losses, loss_module)
         next_content_idx = next_content_idx + 1
       end
       if name == style_layers[next_style_idx] then
         print("Setting up style layer  ", i, ":", layer.name)
-        local gram = GramMatrix():float()
-        if params.gpu >= 0 then
-          if params.backend ~= 'clnn' then
-            gram = gram:cuda()
-          else
-            gram = gram:cl()
-          end
-        end
-        local target = nil
-        for i = 1, #style_images_caffe do
-          local target_features = net:forward(style_images_caffe[i]):clone()
-          local target_i = gram:forward(target_features):clone()
-          target_i:div(target_features:nElement())
-          target_i:mul(style_blend_weights[i])
-          if i == 1 then
-            target = target_i
-          else
-            target:add(target_i)
-          end
-        end
         local norm = params.normalize_gradients
+<<<<<<< HEAD
         local loss_module = nn.StyleLoss(params.style_weight * tonumber(style_layer_weights[next_style_idx]), target, norm):float()
         if params.gpu >= 0 then
           if params.backend ~= 'clnn' then
@@ -235,16 +166,53 @@ local function main(params)
             loss_module:cl()
           end
         end
+=======
+        local loss_module = nn.StyleLoss(params.style_weight, norm):type(dtype)
+>>>>>>> jcjohnson/master
         net:add(loss_module)
         table.insert(style_losses, loss_module)
         next_style_idx = next_style_idx + 1
       end
     end
   end
+  if multigpu then
+    net = setup_multi_gpu(net, params)
+  end
+  net:type(dtype)
+
+  -- Capture content targets
+  for i = 1, #content_losses do
+    content_losses[i].mode = 'capture'
+  end
+  print 'Capturing content targets'
+  print(net)
+  content_image_caffe = content_image_caffe:type(dtype)
+  net:forward(content_image_caffe:type(dtype))
+
+  -- Capture style targets
+  for i = 1, #content_losses do
+    content_losses[i].mode = 'none'
+  end
+  for i = 1, #style_images_caffe do
+    print(string.format('Capturing style target %d', i))
+    for j = 1, #style_losses do
+      style_losses[j].mode = 'capture'
+      style_losses[j].blend_weight = style_blend_weights[i]
+    end
+    net:forward(style_images_caffe[i]:type(dtype))
+  end
+
+  -- Set all loss modules to loss mode
+  for i = 1, #content_losses do
+    content_losses[i].mode = 'loss'
+  end
+  for i = 1, #style_losses do
+    style_losses[i].mode = 'loss'
+  end
 
   -- We don't need the base CNN anymore, so clean it up to save memory.
   cnn = nil
-  for i=1,#net.modules do
+  for i=1, #net.modules do
     local module = net.modules[i]
     if torch.type(module) == 'nn.SpatialConvolutionMM' then
         -- remove these, not used, but uses gpu memory
@@ -253,7 +221,7 @@ local function main(params)
     end
   end
   collectgarbage()
-  
+
   -- Initialize the image
   if params.seed >= 0 then
     torch.manualSeed(params.seed)
@@ -262,18 +230,16 @@ local function main(params)
   if params.init == 'random' then
     img = torch.randn(content_image:size()):float():mul(0.001)
   elseif params.init == 'image' then
-    img = content_image_caffe:clone():float()
+    if init_image then
+      img = init_image:clone()
+    else
+      img = content_image_caffe:clone()
+    end
   else
     error('Invalid init type')
   end
-  if params.gpu >= 0 then
-    if params.backend ~= 'clnn' then
-      img = img:cuda()
-    else
-      img = img:cl()
-    end
-  end
-  
+  img = img:type(dtype)
+
   -- Run it through the network once to get the proper size for the gradient
   -- All the gradients will come from the extra loss modules, so we just pass
   -- zeros into the top of the net on the backward pass.
@@ -286,7 +252,12 @@ local function main(params)
     optim_state = {
       maxIter = params.num_iterations,
       verbose=true,
+      tolX=-1,
+      tolFun=-1,
     }
+    if params.lbfgs_num_correction > 0 then
+      optim_state.nCorrection = params.lbfgs_num_correction
+    end
   elseif params.optimizer == 'adam' then
     optim_state = {
       learningRate = params.learning_rate,
@@ -319,13 +290,19 @@ local function main(params)
       if t == params.num_iterations then
         filename = params.output_image
       end
+
+      -- Maybe perform postprocessing for color-independent style transfer
+      if params.original_colors == 1 then
+        disp = original_colors(content_image, disp)
+      end
+
       image.save(filename, disp)
     end
   end
 
   -- Function to evaluate loss and gradient. We run the net forward and
   -- backward to get the gradient, and sum up losses from the loss modules.
-  -- optim.lbfgs internally handles iteration and calls this fucntion many
+  -- optim.lbfgs internally handles iteration and calls this function many
   -- times, so we manually count the number of iterations to handle printing
   -- and saving intermediate results.
   local num_calls = 0
@@ -359,7 +336,102 @@ local function main(params)
     end
   end
 end
-  
+
+
+function setup_gpu(params)
+  local multigpu = false
+  if params.gpu:find(',') then
+    multigpu = true
+    params.gpu = params.gpu:split(',')
+    for i = 1, #params.gpu do
+      params.gpu[i] = tonumber(params.gpu[i]) + 1
+    end
+  else
+    params.gpu = tonumber(params.gpu) + 1
+  end
+  local dtype = 'torch.FloatTensor'
+  if multigpu or params.gpu > 0 then
+    if params.backend ~= 'clnn' then
+      require 'cutorch'
+      require 'cunn'
+      if multigpu then
+        cutorch.setDevice(params.gpu[1])
+      else
+        cutorch.setDevice(params.gpu)
+      end
+      dtype = 'torch.CudaTensor'
+    else
+      require 'clnn'
+      require 'cltorch'
+      if multigpu then
+        cltorch.setDevice(params.gpu[1])
+      else
+        cltorch.setDevice(params.gpu)
+      end
+      dtype = torch.Tensor():cl():type()
+    end
+  else
+    params.backend = 'nn'
+  end
+
+  if params.backend == 'cudnn' then
+    require 'cudnn'
+    if params.cudnn_autotune then
+      cudnn.benchmark = true
+    end
+    cudnn.SpatialConvolution.accGradParameters = nn.SpatialConvolutionMM.accGradParameters -- ie: nop
+  end
+  return dtype, multigpu
+end
+
+
+function setup_multi_gpu(net, params)
+  local DEFAULT_STRATEGIES = {
+    [2] = {3},
+  }
+  local gpu_splits = nil
+  if params.multigpu_strategy == '' then
+    -- Use a default strategy
+    gpu_splits = DEFAULT_STRATEGIES[#params.gpu]
+    -- Offset the default strategy by one if we are using TV
+    if params.tv_weight > 0 then
+      for i = 1, #gpu_splits do gpu_splits[i] = gpu_splits[i] + 1 end
+    end
+  else
+    -- Use the user-specified multigpu strategy
+    gpu_splits = params.multigpu_strategy:split(',')
+    for i = 1, #gpu_splits do
+      gpu_splits[i] = tonumber(gpu_splits[i])
+    end
+  end
+  assert(gpu_splits ~= nil, 'Must specify -multigpu_strategy')
+  local gpus = params.gpu
+
+  local cur_chunk = nn.Sequential()
+  local chunks = {}
+  for i = 1, #net do
+    cur_chunk:add(net:get(i))
+    if i == gpu_splits[1] then
+      table.remove(gpu_splits, 1)
+      table.insert(chunks, cur_chunk)
+      cur_chunk = nn.Sequential()
+    end
+  end
+  table.insert(chunks, cur_chunk)
+  assert(#chunks == #gpus)
+
+  local new_net = nn.Sequential()
+  for i = 1, #chunks do
+    local out_device = nil
+    if i == #chunks then
+      out_device = gpus[1]
+    end
+    new_net:add(nn.GPU(chunks[i], gpus[i], out_device))
+  end
+
+  return new_net
+end
+
 
 function build_filename(output_image, iteration)
   local ext = paths.extname(output_image)
@@ -393,65 +465,94 @@ function deprocess(img)
 end
 
 
+-- Combine the Y channel of the generated image and the UV channels of the
+-- content image to perform color-independent style transfer.
+function original_colors(content, generated)
+  local generated_y = image.rgb2yuv(generated)[{{1, 1}}]
+  local content_uv = image.rgb2yuv(content)[{{2, 3}}]
+  return image.yuv2rgb(torch.cat(generated_y, content_uv, 1))
+end
+
+
 -- Define an nn Module to compute content loss in-place
 local ContentLoss, parent = torch.class('nn.ContentLoss', 'nn.Module')
 
-function ContentLoss:__init(strength, target, normalize)
+function ContentLoss:__init(strength, normalize)
   parent.__init(self)
   self.strength = strength
-  self.target = target
+  self.target = torch.Tensor()
   self.normalize = normalize or false
   self.loss = 0
   self.crit = nn.MSECriterion()
+  self.mode = 'none'
 end
 
 function ContentLoss:updateOutput(input)
-  if input:nElement() == self.target:nElement() then
+  if self.mode == 'loss' then
     self.loss = self.crit:forward(input, self.target) * self.strength
-  else
-    print('WARNING: Skipping content loss')
+  elseif self.mode == 'capture' then
+    self.target:resizeAs(input):copy(input)
   end
   self.output = input
   return self.output
 end
 
 function ContentLoss:updateGradInput(input, gradOutput)
-  if input:nElement() == self.target:nElement() then
-    self.gradInput = self.crit:backward(input, self.target)
+  if self.mode == 'loss' then
+    if input:nElement() == self.target:nElement() then
+      self.gradInput = self.crit:backward(input, self.target)
+    end
+    if self.normalize then
+      self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
+    end
+    self.gradInput:mul(self.strength)
+    self.gradInput:add(gradOutput)
+  else
+    self.gradInput:resizeAs(gradOutput):copy(gradOutput)
   end
-  if self.normalize then
-    self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
-  end
-  self.gradInput:mul(self.strength)
-  self.gradInput:add(gradOutput)
   return self.gradInput
 end
 
--- Returns a network that computes the CxC Gram matrix from inputs
--- of size C x H x W
-function GramMatrix()
-  local net = nn.Sequential()
-  net:add(nn.View(-1):setNumInputDims(2))
-  local concat = nn.ConcatTable()
-  concat:add(nn.Identity())
-  concat:add(nn.Identity())
-  net:add(concat)
-  net:add(nn.MM(false, true))
-  return net
+
+local Gram, parent = torch.class('nn.GramMatrix', 'nn.Module')
+
+function Gram:__init()
+  parent.__init(self)
+end
+
+function Gram:updateOutput(input)
+  assert(input:dim() == 3)
+  local C, H, W = input:size(1), input:size(2), input:size(3)
+  local x_flat = input:view(C, H * W)
+  self.output:resize(C, C)
+  self.output:mm(x_flat, x_flat:t())
+  return self.output
+end
+
+function Gram:updateGradInput(input, gradOutput)
+  assert(input:dim() == 3 and input:size(1))
+  local C, H, W = input:size(1), input:size(2), input:size(3)
+  local x_flat = input:view(C, H * W)
+  self.gradInput:resize(C, H * W):mm(gradOutput, x_flat)
+  self.gradInput:addmm(gradOutput:t(), x_flat)
+  self.gradInput = self.gradInput:view(C, H, W)
+  return self.gradInput
 end
 
 
 -- Define an nn Module to compute style loss in-place
 local StyleLoss, parent = torch.class('nn.StyleLoss', 'nn.Module')
 
-function StyleLoss:__init(strength, target, normalize)
+function StyleLoss:__init(strength, normalize)
   parent.__init(self)
   self.normalize = normalize or false
   self.strength = strength
-  self.target = target
+  self.target = torch.Tensor()
+  self.mode = 'none'
   self.loss = 0
-  
-  self.gram = GramMatrix()
+
+  self.gram = nn.GramMatrix()
+  self.blend_weight = nil
   self.G = nil
   self.crit = nn.MSECriterion()
 end
@@ -459,21 +560,34 @@ end
 function StyleLoss:updateOutput(input)
   self.G = self.gram:forward(input)
   self.G:div(input:nElement())
-  self.loss = self.crit:forward(self.G, self.target)
-  self.loss = self.loss * self.strength
+  if self.mode == 'capture' then
+    if self.blend_weight == nil then
+      self.target:resizeAs(self.G):copy(self.G)
+    elseif self.target:nElement() == 0 then
+      self.target:resizeAs(self.G):copy(self.G):mul(self.blend_weight)
+    else
+      self.target:add(self.blend_weight, self.G)
+    end
+  elseif self.mode == 'loss' then
+    self.loss = self.strength * self.crit:forward(self.G, self.target)
+  end
   self.output = input
   return self.output
 end
 
 function StyleLoss:updateGradInput(input, gradOutput)
-  local dG = self.crit:backward(self.G, self.target)
-  dG:div(input:nElement())
-  self.gradInput = self.gram:backward(input, dG)
-  if self.normalize then
-    self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
+  if self.mode == 'loss' then
+    local dG = self.crit:backward(self.G, self.target)
+    dG:div(input:nElement())
+    self.gradInput = self.gram:backward(input, dG)
+    if self.normalize then
+      self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
+    end
+    self.gradInput:mul(self.strength)
+    self.gradInput:add(gradOutput)
+  else
+    self.gradInput = gradOutput
   end
-  self.gradInput:mul(self.strength)
-  self.gradInput:add(gradOutput)
   return self.gradInput
 end
 
