@@ -71,10 +71,6 @@ local function main(params)
     table.insert(style_images_caffe, img_caffe)
   end
 
-<<<<<<< HEAD
-
- 
-=======
   local init_image = nil
   if params.init_image ~= '' then
     init_image = image.load(params.init_image, 3)
@@ -82,7 +78,6 @@ local function main(params)
     init_image = image.scale(init_image, W, H, 'bilinear')
     init_image = preprocess(init_image):float()
   end
->>>>>>> jcjohnson/master
 
   -- Handle style blending weights for multiple style inputs
   local style_blend_weights = nil
@@ -119,7 +114,7 @@ local function main(params)
      style_layer_weights = params.style_layer_weights:split(',')
      assert(#style_layer_weights == #style_layers,
       '-style_layer_weights and -style_layers must have the same number of elements')
-   end 
+   end
 
   -- Set up the network, inserting style and content loss modules
   local content_losses, style_losses = {}, {}
@@ -157,18 +152,7 @@ local function main(params)
       if name == style_layers[next_style_idx] then
         print("Setting up style layer  ", i, ":", layer.name)
         local norm = params.normalize_gradients
-<<<<<<< HEAD
-        local loss_module = nn.StyleLoss(params.style_weight * tonumber(style_layer_weights[next_style_idx]), target, norm):float()
-        if params.gpu >= 0 then
-          if params.backend ~= 'clnn' then
-            loss_module:cuda()
-          else
-            loss_module:cl()
-          end
-        end
-=======
-        local loss_module = nn.StyleLoss(params.style_weight, norm):type(dtype)
->>>>>>> jcjohnson/master
+        local loss_module = nn.StyleLoss(params.style_weight * tonumber(style_layer_weights[next_style_idx]), target, norm):type(dtype)
         net:add(loss_module)
         table.insert(style_losses, loss_module)
         next_style_idx = next_style_idx + 1
