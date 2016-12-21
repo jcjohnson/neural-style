@@ -113,7 +113,7 @@ def build_parser():
 
 
 def run_on_file(opts, input_file):
-    output_dir = opts.output_path if opts.output_path != None else os.getcwd()
+    output_dir = expanduser(opts.output_path) if opts.output_path != None else os.getcwd()
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     out_file_name = '{style_image}_{content_image}_cw{content_weight}_sw{style_weight}_\
