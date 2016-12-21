@@ -204,8 +204,8 @@ def printProgress(iteration, total, prefix='', suffix='', decimals=1, barLength=
     formatStr = "{0:." + str(decimals) + "f}"
     percent = formatStr.format(100 * (iteration / float(total)))
     filledLength = int(round(barLength * iteration / float(total)))
-    bar = '█' * filledLength + '-' * (barLength - filledLength)
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percent, '%', suffix)),
+    bar_str = '█' * filledLength + '-' * (barLength - filledLength)
+    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar_str, percent, '%', suffix)),
     if iteration == total:
         sys.stdout.write('\n')
     sys.stdout.flush()
@@ -217,6 +217,7 @@ def main():
     # check_opts(opts)
 
     input_path = expanduser(opts.content_image)
+    print('Input path is {0}'.format(input_path))
     if os.path.isfile(input_path):
         run_on_file(opts, input_path)
     else:
@@ -224,6 +225,7 @@ def main():
         count = len(input_files)
         i = 1
         for input_filename in input_files:
+            print('Input file is {0}'.format(input_filename))
             run_on_file(opts, input_filename)
             printProgress(i, count, prefix='Progress:',
                           suffix='Complete', barLength=100)
