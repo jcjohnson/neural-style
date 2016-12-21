@@ -4,7 +4,7 @@ import os
 import subprocess
 from datetime import datetime
 from argparse import ArgumentParser
-from os.path import basename, splitext
+from os.path import basename, splitext, expanduser
 
 RUN_SCRIPT_NAME = "neural_style.lua"
 
@@ -55,7 +55,7 @@ def build_parser():
                         dest='num_iter')
     parser.add_argument('-normalize_gradients', default=False,
                         dest='normalize_gradients')
-    parser.add_argument('-init', default='random', dest='init_image',
+    parser.add_argument('-init', default='random', dest='init',
                         choices=['random', 'image'])
     parser.add_argument('-optimizer', default='lbfgs', dest='optimizer',
                         choices=['lbfgs', 'adam'])
@@ -158,9 +158,9 @@ lr{learning_rate}_sc{style_scale}_tv{tv_weight}'.format(
 -pooling {pooling} -proto_file {proto_file} -model_file {model_file}'.format(
     script=RUN_SCRIPT_NAME,
     style_scale=opts.style_scale,
-    init=opts.init_image,
-    style_image=opts.style_image,
-    content_image=opts.content_image,
+    init=opts.init,
+    style_image=expanduser(opts.style_image),
+    content_image=expanduser(opts.content_image),
     image_size=opts.image_size,
     output_image=out_file_path,
     content_weight=opts.content_weight,
