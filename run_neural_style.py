@@ -10,6 +10,7 @@ RUN_SCRIPT_NAME = "neural_style.lua"
 
 def build_parser():
     parser = ArgumentParser()
+
     # Basic options
     parser.add_argument('-style_image', type=str,
                         default='examples/inputs/seated-nude.jpg',
@@ -59,7 +60,7 @@ def build_parser():
                         choices=['random', 'image'])
     parser.add_argument('-optimizer', default='lbfgs', dest='optimizer',
                         choices=['lbfgs', 'adam'])
-    parser.add_argument('-learning_rate', default=5, type=float,
+    parser.add_argument('-learning_rate', default=10, type=float,
                         dest='learning_rate')
 
     # Output options
