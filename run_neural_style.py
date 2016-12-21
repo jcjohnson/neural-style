@@ -159,7 +159,7 @@ lr{learning_rate}_sc{style_scale}_tv{tv_weight}'.format(
     script=RUN_SCRIPT_NAME,
     style_scale=opts.style_scale,
     init=opts.init,
-    style_image=opts.style_image,
+    style_image=expanduser(opts.style_image),
     content_image=expanduser(opts.content_image),
     image_size=opts.image_size,
     output_image=out_file_path,
