@@ -107,7 +107,7 @@ def build_parser():
                         default=False,
                         dest='time_markers')
 
-    # TODO: style_layer_weights
+    # TODO: style_layer_weights, lbfgs_num_correction
 
     return parser
 
@@ -116,13 +116,16 @@ def run_on_file(opts, input_file):
     output_dir = expanduser(opts.output_path) if opts.output_path != None else os.getcwd()
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    optimizer_str = opts.optimizer
+    if opts.optimizer == 'adam':
+        optimizer_str += '_lr{0}'.format('%g'%(opts.learning_rate))
     out_file_name = '{style_image}_{content_image}_cw{content_weight}_sw{style_weight}_\
-lr{learning_rate}_sc{style_scale}_tv{tv_weight}'.format(
+{optimizer}_sc{style_scale}_tv{tv_weight}'.format(
     style_image=splitext(basename(opts.style_image))[0],
     content_image=splitext(basename(input_file))[0],
     content_weight='%g'%(opts.content_weight),
     style_weight='%g'%(opts.style_weight),
-    learning_rate='%g'%(opts.learning_rate),
+    optimizer=optimizer_str,
     style_scale='%g'%(opts.style_scale),
     tv_weight=opts.tv_weight
     )
