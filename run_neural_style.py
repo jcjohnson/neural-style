@@ -155,7 +155,7 @@ lr{learning_rate}_sc{style_scale}_tv{tv_weight}'.format(
     style_scale=opts.style_scale,
     init=opts.init,
     style_image=expanduser(opts.style_image),
-    content_image=opts.content_image,
+    content_image=input_file,
     image_size=opts.image_size,
     output_image=out_file_path,
     content_weight=opts.content_weight,
@@ -226,7 +226,7 @@ def main():
         i = 1
         for input_filename in input_files:
             print('Input file is {0}'.format(input_filename))
-            run_on_file(opts, input_filename)
+            run_on_file(opts, join(input_path, input_filename))
             printProgress(i, count, prefix='Progress:',
                           suffix='Complete', barLength=100)
             i += 1
