@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os
-import subprocess
+import os, sys, subprocess
 from datetime import datetime
 from argparse import ArgumentParser
-from os.path import basename, splitext, expanduser
+from os.path import basename, splitext, expanduser, isfile, join
+from os import listdir
 
 RUN_SCRIPT_NAME = "neural_style.lua"
 
@@ -24,7 +24,8 @@ def build_parser():
     '''
     parser.add_argument('-content_image', type=str,
                         default='examples/inputs/tubingen.jpg',
-                        dest='content_image', help='Content target image',
+                        dest='content_image',
+                        help='Content target image or folder with images',
                         metavar='CONTENT_IMAGE', required=True)
 
     parser.add_argument('-image_size', type=int,
@@ -111,14 +112,7 @@ def build_parser():
     return parser
 
 
-# def check_opts(opts):
-
-
-def main():
-    parser = build_parser()
-    opts = parser.parse_args()
-    # check_opts(opts)
-
+def run_on_file(opts, input_file):
     output_dir = opts.output_path if opts.output_path != None else os.getcwd()
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -161,7 +155,7 @@ lr{learning_rate}_sc{style_scale}_tv{tv_weight}'.format(
     style_scale=opts.style_scale,
     init=opts.init,
     style_image=expanduser(opts.style_image),
-    content_image=expanduser(opts.content_image),
+    content_image=opts.content_image,
     image_size=opts.image_size,
     output_image=out_file_path,
     content_weight=opts.content_weight,
@@ -193,6 +187,47 @@ lr{learning_rate}_sc{style_scale}_tv{tv_weight}'.format(
                           universal_newlines=True) as proc:
         print(proc.stdout.read())
         print(proc.stderr.read())
+
+
+# Print iterations progress
+def printProgress(iteration, total, prefix='', suffix='', decimals=1, barLength=100):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        barLength   - Optional  : character length of bar (Int)
+    """
+    formatStr = "{0:." + str(decimals) + "f}"
+    percent = formatStr.format(100 * (iteration / float(total)))
+    filledLength = int(round(barLength * iteration / float(total)))
+    bar = '█' * filledLength + '-' * (barLength - filledLength)
+    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percent, '%', suffix)),
+    if iteration == total:
+        sys.stdout.write('\n')
+    sys.stdout.flush()
+
+
+def main():
+    parser = build_parser()
+    opts = parser.parse_args()
+    # check_opts(opts)
+
+    input_path = expanduser(opts.content_image)
+    if os.path.isfile(input_path):
+        run_on_file(opts, input_path)
+    else:
+        input_files = [f for f in listdir(input_path) if isfile(join(input_path, f))]
+        count = len(input_files)
+        i = 1
+        for input_filename in input_files:
+            run_on_file(opts, input_filename)
+            printProgress(i, count, prefix='Progress:',
+                          suffix='Complete', barLength=100)
+            i += 1
 
 if __name__ == '__main__':
     main()
