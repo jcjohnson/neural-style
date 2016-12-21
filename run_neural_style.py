@@ -1,4 +1,5 @@
-from __future__ import print_function
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os, sys, subprocess
 from datetime import datetime
 from argparse import ArgumentParser
@@ -118,7 +119,7 @@ def run_on_file(opts, input_file):
     out_file_name = '{style_image}_{content_image}_cw{content_weight}_sw{style_weight}_\
 lr{learning_rate}_sc{style_scale}_tv{tv_weight}'.format(
     style_image=splitext(basename(opts.style_image))[0],
-    content_image=splitext(basename(opts.content_image))[0],
+    content_image=splitext(basename(input_file))[0],
     content_weight='%g'%(opts.content_weight),
     style_weight='%g'%(opts.style_weight),
     learning_rate='%g'%(opts.learning_rate),
@@ -204,7 +205,8 @@ def printProgress(iteration, total, prefix='', suffix='', decimals=1, barLength=
     percent = formatStr.format(100 * (iteration / float(total)))
     filledLength = int(round(barLength * iteration / float(total)))
     bar = '█' * filledLength + '-' * (barLength - filledLength)
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percent, '%', suffix)),
+    text = '\r%s |%s| %s%s %s' % (prefix, bar, percent, '%', suffix)
+    sys.stdout.write(text.encode('utf-8')),
     if iteration == total:
         sys.stdout.write('\n')
     sys.stdout.flush()
