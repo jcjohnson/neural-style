@@ -7,6 +7,8 @@ from os.path import basename, splitext, expanduser, isfile, join
 from os import listdir
 
 RUN_SCRIPT_NAME = "neural_style.lua"
+DEF_CONTENT_LAYERS = 'relu4_2'
+DEF_STYLE_LAYERS = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
 
 def build_parser():
     parser = ArgumentParser()
@@ -71,6 +73,16 @@ def build_parser():
                         dest='save_iter')
     parser.add_argument('-output_path', default=None, type=str,
                         dest='output_path')
+    parser.add_argument('-input_file_as_folder', dest='input_file_as_folder',
+                        action='store_true')
+    parser.add_argument('-no-input_file_as_folder', dest='input_file_as_folder',
+                        action='store_false')
+    parser.set_defaults(input_file_as_folder=True)
+    parser.add_argument('-style_as_folder', dest='style_as_folder',
+                        action='store_true')
+    parser.add_argument('-no-style_as_folder', dest='style_as_folder',
+                        action='store_false')
+    parser.set_defaults(style_as_folder=True)
 
     # Other options
     parser.add_argument('-style_scale', default=1.0, type=float,
@@ -95,11 +107,11 @@ def build_parser():
     # Layers options
     parser.add_argument('-content_layers', type=str,
                         help='layers for content',
-                        default='relu4_2',
+                        default=DEF_CONTENT_LAYERS,
                         dest='content_layers')
     parser.add_argument('-style_layers', type=str,
                         help='layers for style',
-                        default='relu1_1,relu2_1,relu3_1,relu4_1,relu5_1',
+                        default=DEF_STYLE_LAYERS,
                         dest='style_layers')
 
     # Runner options
@@ -114,15 +126,20 @@ def build_parser():
 
 def run_on_file(opts, input_file):
     output_dir = expanduser(opts.output_path) if opts.output_path != None else os.getcwd()
+    if opts.style_as_folder == True:
+        output_dir = join(output_dir, splitext(basename(opts.style_image))[0])
+    if opts.input_file_as_folder == True:
+        output_dir = join(output_dir, splitext(basename(input_file))[0])
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     optimizer_str = opts.optimizer
     if opts.optimizer == 'adam':
         optimizer_str += '_lr{0}'.format('%g'%(opts.learning_rate))
-    out_file_name = '{style_image}_{content_image}_cw{content_weight}_sw{style_weight}_\
+    out_file_name = '{style_image}{content_image}{sep1}cw{content_weight}_sw{style_weight}_\
 {optimizer}_sc{style_scale}_tv{tv_weight}'.format(
-    style_image=splitext(basename(opts.style_image))[0],
-    content_image=splitext(basename(input_file))[0],
+    style_image=splitext(basename(opts.style_image))[0] if opts.style_as_folder == False else '',
+    content_image=('_'+splitext(basename(input_file))[0]) if opts.input_file_as_folder == False else '',
+    sep1='_' if opts.input_file_as_folder == False and opts.style_as_folder == False else '',
     content_weight='%g'%(opts.content_weight),
     style_weight='%g'%(opts.style_weight),
     optimizer=optimizer_str,
@@ -133,6 +150,16 @@ def run_on_file(opts, input_file):
         out_file_name += '_norm'
     if opts.original_colors:
         out_file_name += '_colors'
+    if opts.style_layers != DEF_STYLE_LAYERS:
+        # relu1_1,relu2_1,relu3_1,relu4_1,relu5_1
+        style_layers = opts.style_layers.replace('relu', '') \
+                                        .replace('_', '').replace(',', '-')
+        out_file_name += '_sl{0}'.format(style_layers)
+    if opts.content_layers != DEF_CONTENT_LAYERS:
+        # relu1_1,relu2_1,relu3_1,relu4_1,relu5_1
+        content_layers = opts.content_layers.replace('relu', '') \
+                                        .replace('_', '').replace(',', '-')
+        out_file_name += '_cl{0}'.format(content_layers)
     if opts.time_markers:
         now = datetime.now()
         out_file_name += '_{0}'.format(now.strftime('%Y%m%d_%H%M%S'))
@@ -182,7 +209,7 @@ def run_on_file(opts, input_file):
     model_file=opts.model_file)
 
     print('Script \'{0}\''.format(run_script))
-
+    return
     with subprocess.Popen(run_script, shell=True,
                           stdin=subprocess.PIPE,
                           stdout=subprocess.PIPE,
