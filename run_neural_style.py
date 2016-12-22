@@ -209,7 +209,6 @@ def run_on_file(opts, input_file):
     model_file=opts.model_file)
 
     print('Script \'{0}\''.format(run_script))
-    return
     with subprocess.Popen(run_script, shell=True,
                           stdin=subprocess.PIPE,
                           stdout=subprocess.PIPE,
