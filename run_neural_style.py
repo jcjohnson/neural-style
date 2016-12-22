@@ -215,8 +215,8 @@ def run_on_file(opts, input_file):
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE,
                           universal_newlines=True) as proc:
-        print(proc.stdout.read())
-        print(proc.stderr.read())
+        for line in iter(proc.stdout.readline, ''):
+            sys.stdout.write(line)
 
 
 # Print iterations progress
