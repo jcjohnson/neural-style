@@ -135,11 +135,12 @@ def run_on_file(opts, input_file):
     optimizer_str = opts.optimizer
     if opts.optimizer == 'adam':
         optimizer_str += '_lr{0}'.format('%g'%(opts.learning_rate))
-    out_file_name = '{style_image}{content_image}{sep1}cw{content_weight}_sw{style_weight}_\
+    out_file_name = '{style_image}{content_image}{sep1}i{iter}cw{content_weight}_sw{style_weight}_\
 {optimizer}_sc{style_scale}_tv{tv_weight}'.format(
     style_image=splitext(basename(opts.style_image))[0] if opts.style_as_folder == False else '',
     content_image=('_'+splitext(basename(input_file))[0]) if opts.input_file_as_folder == False else '',
     sep1='_' if opts.input_file_as_folder == False and opts.style_as_folder == False else '',
+    iter=opts.num_iter,
     content_weight='%g'%(opts.content_weight),
     style_weight='%g'%(opts.style_weight),
     optimizer=optimizer_str,
