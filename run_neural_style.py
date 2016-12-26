@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os, sys, subprocess
+import os
+import sys
+import subprocess
 from datetime import datetime
 from argparse import ArgumentParser
 from os.path import basename, splitext, expanduser, isfile, join
@@ -9,6 +11,7 @@ from os import listdir
 RUN_SCRIPT_NAME = "neural_style.lua"
 DEF_CONTENT_LAYERS = 'relu4_2'
 DEF_STYLE_LAYERS = 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1'
+
 
 def build_parser():
     parser = ArgumentParser()
@@ -125,26 +128,27 @@ def build_parser():
 
 
 def run_on_file(opts, input_file):
-    output_dir = expanduser(opts.output_path) if opts.output_path != None else os.getcwd()
-    if opts.style_as_folder == True:
+    output_dir = expanduser(opts.output_path) if opts.output_path is not None
+    else os.getcwd()
+    if opts.style_as_folder is True:
         output_dir = join(output_dir, splitext(basename(opts.style_image))[0])
-    if opts.input_file_as_folder == True:
+    if opts.input_file_as_folder is True:
         output_dir = join(output_dir, splitext(basename(input_file))[0])
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     optimizer_str = opts.optimizer
     if opts.optimizer == 'adam':
-        optimizer_str += '_lr{0}'.format('%g'%(opts.learning_rate))
+        optimizer_str += '_lr{0}'.format('%g' % (opts.learning_rate))
     out_file_name = '{style_image}{content_image}{sep1}i{iter}cw{content_weight}_sw{style_weight}_\
 {optimizer}_sc{style_scale}_tv{tv_weight}'.format(
-    style_image=splitext(basename(opts.style_image))[0] if opts.style_as_folder == False else '',
-    content_image=('_'+splitext(basename(input_file))[0]) if opts.input_file_as_folder == False else '',
-    sep1='_' if opts.input_file_as_folder == False and opts.style_as_folder == False else '',
+    style_image=splitext(basename(opts.style_image))[0] if opts.style_as_folder is False else '',
+    content_image=('_'+splitext(basename(input_file))[0]) if opts.input_file_as_folder is False else '',
+    sep1='_' if opts.input_file_as_folder is False and opts.style_as_folder is False else '',
     iter=opts.num_iter,
-    content_weight='%g'%(opts.content_weight),
-    style_weight='%g'%(opts.style_weight),
+    content_weight='%g' % (opts.content_weight),
+    style_weight='%g' % (opts.style_weight),
     optimizer=optimizer_str,
-    style_scale='%g'%(opts.style_scale),
+    style_scale='%g' % (opts.style_scale),
     tv_weight=opts.tv_weight
     )
     if opts.normalize_gradients:
@@ -182,32 +186,32 @@ def run_on_file(opts, input_file):
 -learning_rate {learning_rate} \
 -original_colors {original_colors} {cudnn_autotune} \
 -pooling {pooling} -proto_file {proto_file} -model_file {model_file}'.format(
-    script=RUN_SCRIPT_NAME,
-    style_scale=opts.style_scale,
-    init=opts.init,
-    style_image=expanduser(opts.style_image),
-    content_image=input_file,
-    image_size=opts.image_size,
-    output_image=out_file_path,
-    content_weight=opts.content_weight,
-    style_weight=opts.style_weight,
-    save_iter=opts.save_iter,
-    print_iter=opts.print_iter,
-    num_iterations=opts.num_iter,
-    content_layers=opts.content_layers,
-    style_layers=opts.style_layers,
-    gpu=opts.gpu,
-    optimizer=opts.optimizer,
-    tv_weight=opts.tv_weight,
-    backend=opts.backend,
-    seed=opts.seed,
-    normalize_gradients=('-normalize_gradients' if opts.normalize_gradients else ''),
-    learning_rate=opts.learning_rate,
-    original_colors=('1' if opts.original_colors else '0'),
-    cudnn_autotune=('-cudnn_autotune' if opts.cudnn_autotune else ''),
-    pooling=opts.pooling,
-    proto_file=opts.proto_file,
-    model_file=opts.model_file)
+                script=RUN_SCRIPT_NAME,
+                style_scale=opts.style_scale,
+                init=opts.init,
+                style_image=expanduser(opts.style_image),
+                content_image=input_file,
+                image_size=opts.image_size,
+                output_image=out_file_path,
+                content_weight=opts.content_weight,
+                style_weight=opts.style_weight,
+                save_iter=opts.save_iter,
+                print_iter=opts.print_iter,
+                num_iterations=opts.num_iter,
+                content_layers=opts.content_layers,
+                style_layers=opts.style_layers,
+                gpu=opts.gpu,
+                optimizer=opts.optimizer,
+                tv_weight=opts.tv_weight,
+                backend=opts.backend,
+                seed=opts.seed,
+                normalize_gradients=('-normalize_gradients' if opts.normalize_gradients else ''),
+                learning_rate=opts.learning_rate,
+                original_colors=('1' if opts.original_colors else '0'),
+                cudnn_autotune=('-cudnn_autotune' if opts.cudnn_autotune else ''),
+                pooling=opts.pooling,
+                proto_file=opts.proto_file,
+                model_file=opts.model_file)
 
     print('Script \'{0}\''.format(run_script))
     with subprocess.Popen(run_script, shell=True,
@@ -220,7 +224,8 @@ def run_on_file(opts, input_file):
 
 
 # Print iterations progress
-def printProgress(iteration, total, prefix='', suffix='', decimals=1, barLength=100):
+def printProgress(iteration, total, prefix='', suffix='', decimals=1,
+                  barLength=100):
     """
     Call in a loop to create terminal progress bar
     @params:
