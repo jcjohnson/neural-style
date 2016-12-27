@@ -128,8 +128,7 @@ def build_parser():
 
 
 def run_on_file(opts, input_file):
-    output_dir = expanduser(opts.output_path) if opts.output_path is not None
-    else os.getcwd()
+    output_dir = expanduser(opts.output_path) if opts.output_path is not None else os.getcwd()
     if opts.style_as_folder is True:
         output_dir = join(output_dir, splitext(basename(opts.style_image))[0])
     if opts.input_file_as_folder is True:
