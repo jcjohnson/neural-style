@@ -95,7 +95,7 @@ When using multiple style images, you can control the degree to which they are b
 It is possible to adjust the relative weights of style layers giving a comma separated list of multipliers (actual style weight of each layer will then be style_layer_weight * style_weight.
 
 ```
-th neural_style.lua -gpu -1 style_layer_weights 1,1,0.1,2,15 
+th neural_style.lua -gpu -1 style_layer_weights 1,1,0.1,2,15
 ```
 
 
@@ -246,7 +246,7 @@ If you are running on a GPU, you can also try running with `-backend cudnn` to r
 
 **Solution:** Update `torch.paths` package to the latest version: `luarocks install paths`
 
-**Problem:** NIN Imagenet model is not giving good results. 
+**Problem:** NIN Imagenet model is not giving good results.
 
 **Solution:** Make sure the correct `-proto_file` is selected. Also make sure the correct parameters for `-content_layers` and `-style_layers` are set. (See OpenCL usage example above.)
 
@@ -265,7 +265,7 @@ These give good results, but can both use a lot of memory. You can reduce memory
   This should work in both CPU and GPU modes.
 * **Reduce image size**: If the above tricks are not enough, you can reduce the size of the generated image;
   pass the flag `-image_size 256` to generate an image at half the default size.
-  
+
 With the default settings, `neural-style` uses about 3.5GB of GPU memory on my system;
 switching to ADAM and cuDNN reduces the GPU memory footprint to about 1GB.
 
@@ -278,7 +278,7 @@ Here are some times for running 500 iterations with `-image_size=512` on a Maxwe
 * `-backend cudnn -cudnn_autotune -optimizer lbfgs`: 58 seconds
 * `-backend cudnn -cudnn_autotune -optimizer adam`: 44 seconds
 * `-backend clnn -optimizer lbfgs`: 169 seconds
-* `-backend clnn -optimizer adam`: 106 seconds 
+* `-backend clnn -optimizer adam`: 106 seconds
 
 Here are the same benchmarks on a Pascal Titan X with cuDNN 5.0 on CUDA 8.0 RC:
 * `-backend nn -optimizer lbfgs`: 43 seconds
@@ -300,7 +300,7 @@ for your setup in order to achieve maximal resolution.
 
 We can achieve very high quality results at high resolution by combining multi-GPU processing with multiscale
 generation as described in the paper
-<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys, 
+<a href="https://arxiv.org/abs/1611.07865">**Controlling Perceptual Factors in Neural Style Transfer**</a> by Leon A. Gatys,
 Alexander S. Ecker, Matthias Bethge, Aaron Hertzmann and Eli Shechtman.
 
 Here is a 3620 x 1905 image generated on a server with four Pascal Titan X GPUs:
@@ -315,6 +315,21 @@ Images are initialized with white noise and optimized using L-BFGS.
 We perform style reconstructions using the `conv1_1`, `conv2_1`, `conv3_1`, `conv4_1`, and `conv5_1` layers
 and content reconstructions using the `conv4_2` layer. As in the paper, the five style reconstruction losses have
 equal weights.
+
+## Helper script
+`run_neural_style.py` (tested on Python 3.5.2) script can be used to automate output file path and name generation like this:
+
+`python3 run_neural_style.py -style_image styles/style22_750.jpg -content_image input/sample1.jpg -optimizer adam -init image -output_path output -backend cudnn -style_weight 800 -content_weight 200 -style_scale 1.8 -learning_rate 3 -image_size 300 -tv_weight 0.001 -seed 150 -num_iterations 500` will create a `output/style22_750/sample1` folder and the result file name will be `i500.0cw200_sw600_adam_lr3_sc1.8_tv0.001.jpg`
+
+The arguments mostly follow the neural-style with some exceptions:
+
+* `-style_blend_weights`: not supported yet
+* `-output_path`: Used instead of `-output_image`. Path for the output folder. Default is current folder.
+* `-input_file_as_folder`: Uses input file
+* `-style_as_folder` and `-no-style_as_folder`: Use/not use style name as an additional folder for output images. Default is `-style_as_folder`
+* `-input_file_as_folder` and `-no-input_file_as_folder`: Use/not use input image file name as an additional folder for output images. Default is `-input_file_as_folder`
+* `-style_layer_weights`: not supported yet
+* `-time_markers`: add time marker (Ymd_HMS) to the end of the output file name
 
 ## Citation
 
