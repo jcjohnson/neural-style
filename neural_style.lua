@@ -23,7 +23,7 @@ cmd:option('-content_weight', 5e0)
 cmd:option('-style_weight', 1e2)
 cmd:option('-tv_weight', 1e-3)
 cmd:option('-num_iterations', 1000)
-cmd:option('-normalize_gradients', false)
+cmd:option('-normalize_gradients', 0.0)
 cmd:option('-init', 'random', 'random|image')
 cmd:option('-init_image', '')
 cmd:option('-optimizer', 'lbfgs', 'lbfgs|adam')
@@ -453,7 +453,8 @@ function ContentLoss:__init(strength, normalize)
   parent.__init(self)
   self.strength = strength
   self.target = torch.Tensor()
-  self.normalize = normalize or false
+  self.normalize = normalize
+  -- if self.normalize > 1.0 then self.normalize = 1.0 end
   self.loss = 0
   self.crit = nn.MSECriterion()
   self.mode = 'none'
@@ -474,8 +475,12 @@ function ContentLoss:updateGradInput(input, gradOutput)
     if input:nElement() == self.target:nElement() then
       self.gradInput = self.crit:backward(input, self.target)
     end
-    if self.normalize then
-      self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
+    if self.normalize ~= 0.0 then
+      if self.normalize == 1.0 then
+        self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
+      else
+        self.gradInput:div(torch.norm(self.gradInput, 1) ^ self.normalize + 1e-8)
+      end
     end
     self.gradInput:mul(self.strength)
     self.gradInput:add(gradOutput)
@@ -517,7 +522,8 @@ local StyleLoss, parent = torch.class('nn.StyleLoss', 'nn.Module')
 
 function StyleLoss:__init(strength, normalize)
   parent.__init(self)
-  self.normalize = normalize or false
+  self.normalize = normalize
+  -- if self.normalize > 1.0 then self.normalize = 1.0 end
   self.strength = strength
   self.target = torch.Tensor()
   self.mode = 'none'
@@ -552,8 +558,12 @@ function StyleLoss:updateGradInput(input, gradOutput)
     local dG = self.crit:backward(self.G, self.target)
     dG:div(input:nElement())
     self.gradInput = self.gram:backward(input, dG)
-    if self.normalize then
-      self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
+    if self.normalize ~= 0.0 then
+      if self.normalize == 1.0 then
+        self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
+      else
+        self.gradInput:div(torch.norm(self.gradInput, 1) ^ self.normalize + 1e-8)
+      end
     end
     self.gradInput:mul(self.strength)
     self.gradInput:add(gradOutput)
