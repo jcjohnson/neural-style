@@ -48,6 +48,7 @@ cmd:option('-seed', -1)
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 
+local content_ignition = true
 
 local function main(params)
   local dtype, multigpu = setup_gpu(params)
@@ -286,6 +287,8 @@ local function main(params)
     for _, mod in ipairs(content_losses) do
       loss = loss + mod.loss
     end
+    content_ignition = loss < 1  -- while content doesn't change, temporarily disable gradients normalization,
+                                 -- because optimization seems to stuck with it at ≈0 content losses on some images
     for _, mod in ipairs(style_losses) do
       loss = loss + mod.loss
     end
@@ -475,7 +478,7 @@ function ContentLoss:updateGradInput(input, gradOutput)
     if input:nElement() == self.target:nElement() then
       self.gradInput = self.crit:backward(input, self.target)
     end
-    if self.normalize ~= 0.0 then
+    if (self.normalize ~= 0.0) and (content_ignition == false) then
       if self.normalize == 1.0 then
         self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
       else
@@ -559,7 +562,7 @@ function StyleLoss:updateGradInput(input, gradOutput)
     dG:div(input:nElement())
     self.gradInput = self.gram:backward(input, dG)
     if self.normalize ~= 0.0 then
-      if self.normalize == 1.0 then
+      if (self.normalize == 1.0) and (content_ignition == false) then
         self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
       else
         self.gradInput:div(torch.norm(self.gradInput, 1) ^ self.normalize + 1e-8)
