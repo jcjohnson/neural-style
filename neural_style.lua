@@ -561,8 +561,8 @@ function StyleLoss:updateGradInput(input, gradOutput)
     local dG = self.crit:backward(self.G, self.target)
     dG:div(input:nElement())
     self.gradInput = self.gram:backward(input, dG)
-    if self.normalize ~= 0.0 then
-      if (self.normalize == 1.0) and (content_ignition == false) then
+    if (self.normalize ~= 0.0) and (content_ignition == false) then
+      if self.normalize == 1.0 then
         self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
       else
         self.gradInput:div(torch.norm(self.gradInput, 1) ^ self.normalize + 1e-8)
