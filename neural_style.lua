@@ -48,7 +48,7 @@ cmd:option('-seed', -1)
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 
-local content_ignition = true
+local auto_off_grad_norm = true
 
 local function main(params)
   local dtype, multigpu = setup_gpu(params)
@@ -287,8 +287,8 @@ local function main(params)
     for _, mod in ipairs(content_losses) do
       loss = loss + mod.loss
     end
-    content_ignition = loss < 1  -- while content doesn't change, temporarily disable gradients normalization,
-                                 -- because optimization seems to stuck with it at ≈0 content losses on some images
+    auto_off_grad_norm = loss < 1  -- while content doesn't change, temporarily disable gradients normalization,
+                                   -- because optimization seems to stuck with it at ≈0 content losses on some images
     for _, mod in ipairs(style_losses) do
       loss = loss + mod.loss
     end
@@ -457,7 +457,7 @@ function ContentLoss:__init(strength, normalize)
   self.strength = strength
   self.target = torch.Tensor()
   self.normalize = normalize
-  -- if self.normalize > 1.0 then self.normalize = 1.0 end
+  if self.normalize > 1.0 then self.normalize = 1.0 end
   self.loss = 0
   self.crit = nn.MSECriterion()
   self.mode = 'none'
@@ -478,7 +478,7 @@ function ContentLoss:updateGradInput(input, gradOutput)
     if input:nElement() == self.target:nElement() then
       self.gradInput = self.crit:backward(input, self.target)
     end
-    if (self.normalize ~= 0.0) and (content_ignition == false) then
+    if (self.normalize ~= 0.0) and (auto_off_grad_norm == false) then
       if self.normalize == 1.0 then
         self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
       else
@@ -526,7 +526,7 @@ local StyleLoss, parent = torch.class('nn.StyleLoss', 'nn.Module')
 function StyleLoss:__init(strength, normalize)
   parent.__init(self)
   self.normalize = normalize
-  -- if self.normalize > 1.0 then self.normalize = 1.0 end
+  if self.normalize > 1.0 then self.normalize = 1.0 end
   self.strength = strength
   self.target = torch.Tensor()
   self.mode = 'none'
@@ -561,7 +561,7 @@ function StyleLoss:updateGradInput(input, gradOutput)
     local dG = self.crit:backward(self.G, self.target)
     dG:div(input:nElement())
     self.gradInput = self.gram:backward(input, dG)
-    if (self.normalize ~= 0.0) and (content_ignition == false) then
+    if (self.normalize ~= 0.0) and (auto_off_grad_norm == false) then
       if self.normalize == 1.0 then
         self.gradInput:div(torch.norm(self.gradInput, 1) + 1e-8)
       else
