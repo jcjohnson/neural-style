@@ -130,7 +130,8 @@ local function main(params)
       else
         net:add(layer)
       end
-      --reflectance padding option from leongatys/NeuralImageSynthesis     
+      --reflectance padding option from leongatys/NeuralImageSynthesis
+      local is_convolution = (layer_type == 'cudnn.SpatialConvolution' or layer_type == 'nn.SpatialConvolution')   
       if is_convolution and params.reflectance then
                     local padW, padH = layer.padW, layer.padH
                     local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH)
@@ -605,6 +606,17 @@ function TVLoss:updateGradInput(input, gradOutput)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
+
+-- Function to set gpu/cpu datatype
+function set_datatype(data, gpu)
+    if gpu >= 0 then
+        data = data:cuda()
+    else
+        data = data:double()
+    end
+    return data
+end
+
 
 
 local params = cmd:parse(arg)
