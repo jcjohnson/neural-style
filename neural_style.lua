@@ -130,6 +130,7 @@ local function main(params)
       else
         net:add(layer)
       end
+      --reflectance padding option from leongatys/NeuralImageSynthesis     
       if is_convolution and params.reflectance then
                     local padW, padH = layer.padW, layer.padH
                     local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH)
