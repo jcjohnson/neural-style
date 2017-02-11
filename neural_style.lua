@@ -48,6 +48,7 @@ cmd:option('-seed', -1)
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 
+cmd:option('-reflectance', false, 'if true, use reflectance padding')
 
 local function main(params)
   local dtype, multigpu = setup_gpu(params)
@@ -129,6 +130,14 @@ local function main(params)
       else
         net:add(layer)
       end
+      if is_convolution and params.reflectance then
+                    local padW, padH = layer.padW, layer.padH
+                    local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH)
+                    pad_layer = set_datatype(pad_layer, params.gpu)
+                    net:add(pad_layer)
+                    layer.padW = 0
+                    layer.padH = 0
+      end                           
       if name == content_layers[next_content_idx] then
         print("Setting up content layer", i, ":", layer.name)
         local norm = params.normalize_gradients
