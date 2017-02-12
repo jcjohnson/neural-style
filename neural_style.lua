@@ -118,6 +118,16 @@ local function main(params)
       local layer = cnn:get(i)
       local name = layer.name
       local layer_type = torch.type(layer)
+      --reflectance padding option from leongatys/NeuralImageSynthesis
+      local is_convolution = (layer_type == 'cudnn.SpatialConvolution' or layer_type == 'nn.SpatialConvolution')   
+      if is_convolution and params.reflectance then
+                    local padW, padH = layer.padW, layer.padH
+                    local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH)
+                    pad_layer = set_datatype(pad_layer, params.gpu)
+                    net:add(pad_layer)
+                    layer.padW = 0
+                    layer.padH = 0
+      end                                
       local is_pooling = (layer_type == 'cudnn.SpatialMaxPooling' or layer_type == 'nn.SpatialMaxPooling')
       if is_pooling and params.pooling == 'avg' then
         assert(layer.padW == 0 and layer.padH == 0)
@@ -129,17 +139,7 @@ local function main(params)
         net:add(avg_pool_layer)
       else
         net:add(layer)
-      end
-      --reflectance padding option from leongatys/NeuralImageSynthesis
-      local is_convolution = (layer_type == 'cudnn.SpatialConvolution' or layer_type == 'nn.SpatialConvolution')   
-      if is_convolution and params.reflectance then
-                    local padW, padH = layer.padW, layer.padH
-                    local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH)
-                    pad_layer = set_datatype(pad_layer, params.gpu)
-                    net:add(pad_layer)
-                    layer.padW = 0
-                    layer.padH = 0
-      end                           
+      end                      
       if name == content_layers[next_content_idx] then
         print("Setting up content layer", i, ":", layer.name)
         local norm = params.normalize_gradients
