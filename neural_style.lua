@@ -122,8 +122,7 @@ local function main(params)
       local is_convolution = (layer_type == 'cudnn.SpatialConvolution' or layer_type == 'nn.SpatialConvolution')   
       if is_convolution and params.reflectance then
                     local padW, padH = layer.padW, layer.padH
-                    local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH)
-                    pad_layer = set_datatype(pad_layer, params.gpu)
+                    local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH):type(dtype)
                     net:add(pad_layer)
                     layer.padW = 0
                     layer.padH = 0
@@ -606,17 +605,6 @@ function TVLoss:updateGradInput(input, gradOutput)
   self.gradInput:add(gradOutput)
   return self.gradInput
 end
-
--- Function to set gpu/cpu datatype
-function set_datatype(data, gpu)
-    if gpu >= 0 then
-        data = data:cuda()
-    else
-        data = data:double()
-    end
-    return data
-end
-
 
 
 local params = cmd:parse(arg)
