@@ -48,7 +48,7 @@ cmd:option('-seed', -1)
 cmd:option('-content_layers', 'relu4_2', 'layers for content')
 cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers for style')
 
-cmd:option('-reflectance', false, 'if true, use reflectance padding')
+cmd:option('-padding', 'default', 'default|reflect')
 
 local function main(params)
   local dtype, multigpu = setup_gpu(params)
@@ -120,7 +120,7 @@ local function main(params)
       local layer_type = torch.type(layer)
       --reflectance padding option from leongatys/NeuralImageSynthesis
       local is_convolution = (layer_type == 'cudnn.SpatialConvolution' or layer_type == 'nn.SpatialConvolution')   
-      if is_convolution and params.reflectance then
+      if is_convolution and params.reflectance == 'reflect' then
                     local padW, padH = layer.padW, layer.padH
                     local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH):type(dtype)
                     net:add(pad_layer)
