@@ -120,7 +120,7 @@ local function main(params)
       local layer_type = torch.type(layer)
       --reflectance padding option from leongatys/NeuralImageSynthesis
       local is_convolution = (layer_type == 'cudnn.SpatialConvolution' or layer_type == 'nn.SpatialConvolution')   
-      if is_convolution and params.reflectance == 'reflect' then
+      if is_convolution and params.padding == 'reflect' then
                     local padW, padH = layer.padW, layer.padH
                     local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH):type(dtype)
                     net:add(pad_layer)
