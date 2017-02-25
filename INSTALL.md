@@ -2,17 +2,24 @@
 
 This guide will walk you through the setup for `neural-style` on Ubuntu.
 
+## Step 0: For newby, install basics tools
+Installing pakets tools like git, curl or make
+
+```
+sudo apt-get update
+sudo apt-get install git curl make
+```
+
 ## Step 1: Install torch7
 
 First we need to install torch, following the installation instructions
-[here](http://torch.ch/docs/getting-started.html#_):
+[here](http://torch.ch/docs/getting-started.html#_) [2017-02-25 - Update commands from torch website]:
 
 ```
-# in a terminal, run the commands
-cd ~/
-curl -s https://raw.githubusercontent.com/torch/ezinstall/master/install-deps | bash
+# in a terminal, run the commands WITHOUT sudo
 git clone https://github.com/torch/distro.git ~/torch --recursive
-cd ~/torch; ./install.sh
+cd ~/torch; bash install-deps;
+./install.sh
 ```
 
 The first script installs all dependencies for torch and may take a while.
