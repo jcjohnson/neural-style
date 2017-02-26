@@ -124,12 +124,13 @@ local function main(params)
           local padW, padH = layer.padW, layer.padH
           if params.padding == 'reflect' then
               local pad_layer = nn.SpatialReflectionPadding(padW, padW, padH, padH):type(dtype)
+              net:add(pad_layer)
           elseif params.padding == 'replicate' then 
               local pad_layer = nn.SpatialReplicationPadding(padW, padW, padH, padH):type(dtype)
+              net:add(pad_layer)
           else
               error('Unknown padding type')
           end	
-          net:add(pad_layer)
           layer.padW = 0
           layer.padH = 0
       end                            
