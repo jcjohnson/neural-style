@@ -128,7 +128,7 @@ local function main(params)
               local pad_layer = nn.SpatialReplicationPadding(padW, padW, padH, padH):type(dtype)
           else
               error('Unknown padding type')
-         end	
+          end	
          net:add(pad_layer)
          layer.padW = 0
          layer.padH = 0
