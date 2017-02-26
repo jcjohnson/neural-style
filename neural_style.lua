@@ -129,9 +129,9 @@ local function main(params)
           else
               error('Unknown padding type')
           end	
-         net:add(pad_layer)
-         layer.padW = 0
-         layer.padH = 0
+          net:add(pad_layer)
+          layer.padW = 0
+          layer.padH = 0
       end                            
       local is_pooling = (layer_type == 'cudnn.SpatialMaxPooling' or layer_type == 'nn.SpatialMaxPooling')
       if is_pooling and params.pooling == 'avg' then
