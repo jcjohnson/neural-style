@@ -1,7 +1,8 @@
 *.swp
 out*.png
 *.png
-*.jpg
+output/*.jpg
+output/*.gif
 *.prototxt*
 *.caffemodel
 models/
