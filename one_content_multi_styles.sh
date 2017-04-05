@@ -13,5 +13,6 @@ for i in $( ls $STYLES_DIR); do
     else
       echo "skipping bc $DEST_IMAGE already exists"
     fi
+    python make_gif -p $DEST_IMAGE -r $CONTENT_INCOMING_DIR/$CONTENT_IMAGE -o output/gif/${CONTENT_IMAGE%????}__${i%????}.gif
 done
 mv $CONTENT_INCOMING_DIR/$CONTENT_IMAGE $CONTENT_COMPLETE_DIR/
