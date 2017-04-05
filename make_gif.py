@@ -22,7 +22,7 @@ def main():
     images = images[1:] + [images[0]]  # hack bc final iteration has no number
     if original:
         original_raw = Image.open(original)
-        original_resized = original_raw.resize((images[0].width, images[0].height))
+        original_resized = original_raw.resize(images[0].size)
         images.append(original_resized)
     # name reflects iteration direction. backwards is normal to weird. forwards is weird to normal
     if direction == 'backwards':
