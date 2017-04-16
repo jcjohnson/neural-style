@@ -131,7 +131,7 @@ sudo dpkg -i cuda-repo-ubuntu1404-7-0-local_7.0-28_amd64.deb
 
 ```
 # For Ubuntu 12.04
-http://developer.download.nvidia.com/compute/cuda/7_0/Prod/local_installers/rpmdeb/cuda-repo-ubuntu1204-7-0-local_7.0-28_amd64.deb
+wget http://developer.download.nvidia.com/compute/cuda/7_0/Prod/local_installers/rpmdeb/cuda-repo-ubuntu1204-7-0-local_7.0-28_amd64.deb
 sudo dpkg -i cuda-repo-ubuntu1204-7-0-local_7.0-28_amd64.deb
 ```
 
