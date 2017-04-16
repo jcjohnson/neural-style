@@ -112,9 +112,8 @@ local function main(params)
     local tv_mod = nn.TVLoss(params.tv_weight):type(dtype)
     net:add(tv_mod)
   end
-  for i = 1, #cnn do
+  for i,layer in ipairs(cnn.modules) do
     if next_content_idx <= #content_layers or next_style_idx <= #style_layers then
-      local layer = cnn:get(i)
       local name = layer.name
       local layer_type = torch.type(layer)
       local is_pooling = (layer_type == 'cudnn.SpatialMaxPooling' or layer_type == 'nn.SpatialMaxPooling')
