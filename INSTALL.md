@@ -142,6 +142,21 @@ sudo apt-get update
 sudo apt-get install cuda
 ```
 
+Next you want to export the cuda path to your environment variables:
+If your hardware runs 32-bit OS, you would want to run the following commands from terminal:
+
+```bash
+  $ export PATH=/usr/local/cuda-7.0/bin:$PATH
+  $ export LD_LIBRARY_PATH=/usr/local/cuda-7.0/lib:$LD_LIBRARY_PATH
+```
+
+For 64-bit systems, you would want to do:
+
+```bash
+  $ export PATH=/usr/local/cuda-7.0/bin:$PATH
+  $ export LD_LIBRARY_PATH=/usr/local/cuda-7.0/lib64:$LD_LIBRARY_PATH
+```
+
 At this point you may need to reboot your machine to load the new graphics driver.
 After rebooting, you should be able to see the status of your graphics card(s) by running
 the command `nvidia-smi`; it should give output that looks something like this:
