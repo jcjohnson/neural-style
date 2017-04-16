@@ -7,6 +7,14 @@ This guide will walk you through the setup for `neural-style` on Ubuntu.
 First we need to install torch, following the installation instructions
 [here](http://torch.ch/docs/getting-started.html#_):
 
+Torch depends on cmake and libreadline-dev. To install Torch, run the following first.
+
+```
+sudo apt-get install cmake libreadline-dev
+```
+
+Now that the dependencies have been installed, we can install torch.
+
 ```
 # in a terminal, run the commands
 cd ~/
