@@ -50,6 +50,9 @@ cmd:option('-style_layers', 'relu1_1,relu2_1,relu3_1,relu4_1,relu5_1', 'layers f
 
 
 local function main(params)
+  if params.seed >= 0 then
+    torch.manualSeed(params.seed)
+  end
   local dtype, multigpu = setup_gpu(params)
 
   local loadcaffe_backend = params.backend
@@ -195,9 +198,6 @@ local function main(params)
   collectgarbage()
 
   -- Initialize the image
-  if params.seed >= 0 then
-    torch.manualSeed(params.seed)
-  end
   local img = nil
   if params.init == 'random' then
     img = torch.randn(content_image:size()):float():mul(0.001)
