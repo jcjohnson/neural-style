@@ -1,4 +1,4 @@
-#neural-style Installation
+# Neural-style Installation
 
 This guide will walk you through the setup for `neural-style` on Ubuntu.
 
