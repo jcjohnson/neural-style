@@ -1,6 +1,6 @@
 #neural-style Installation
 
-This guide will walk you through the setup for `neural-style` on Ubuntu.
+This guide will walk you through the setup for `neural-style` on Ubuntu and OSX.
 
 ## Step 1: Install torch7
 
@@ -34,7 +34,13 @@ To quit just type `exit`.
 so we'll need to install that first:
 
 ```
+# For Ubuntu
 sudo apt-get install libprotobuf-dev protobuf-compiler
+```
+
+```
+# For OSX
+brew install protobuf
 ```
 
 Now we can instal `loadcaffe`:
