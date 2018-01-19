@@ -100,6 +100,38 @@ Clockwise from upper left: "The Starry Night" + "The Scream", "The Scream" + "Co
 <img src="https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/outputs/tubingen_seated_nude_composition_vii.png" height="250px">
 </div>
 
+### Learn from multiple styles with GAN
+When using hundreds of pictures as style image for neural style, a discriminator could be used to calculate the style loss. The discriminator takes gram matrix as input and was trained to discriminate whether the generated image belongs to the target style.
+
+The traditional way of calculating sytle loss:![](https://github.com/citymonkeymao/neural-style/blob/gan/data/style-gan.png?raw=true)
+
+The new way of calculating style loss:
+![](https://github.com/citymonkeymao/neural-style/blob/gan/data/style-gan2.png?raw=true)
+
+#### Effect
+##### Imitate Shinkai Makoto Style
+![](https://github.com/citymonkeymao/neural-style/blob/gan/data/cmp_manual.png?raw=true)
+##### Monet(Comparing to [CycleGAN](https://github.com/junyanz/CycleGAN))
+![](https://github.com/citymonkeymao/neural-style/blob/gan/data/monet.png?raw=true)
+
+##### Usage
+1. Download style image set(borrowed from CycleGAN):
+  `bash ./datasets/download_dataset.sh <dataset name>`
+   <dataset name> could be monet2photo, vangogh2photo, ukiyoe2photo, cezanne2photo
+2. Do style transfer
+ ```th neural_style.lua -style_image `./list_images.sh <style_image_dir>` -content_<content_image>  -gan -content_weight 2 -style_weight 50000 -image_size 256 -backend cudnn -num_iterations 10000 -d_learning_rate 0.000001`
+ ```
+ `-gan`command specifies using Discriminator to calculate style loss. `d_learning_rate` is the learning rate for the Discriminator, `style_image_dir`should not contain`~`. You need to play with parameters for different style and size. 
+## example
+Transfer fj.jpg to vangogh style
+1. Download vangogh's painting   `bash ./datasets/download_dataset.sh vangogh2photo`
+2. Style image
+  ```
+  th neural_style.lua -style_image `./list_images.sh datasets/vangogh2photo/trainA
+` -content_image fj.jpg  -gan -content_weight 1 -style_weight 50000 -image_size 256 -backend cudnn -num_iterations
+ 10000 -d_learning_rate 0.0000001
+  ```
+
 
 ### Style Interpolation
 When using multiple style images, you can control the degree to which they are blended:
