@@ -113,8 +113,8 @@ The new way of calculating style loss:
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/cmp_manual.png?raw=true)
 ##### Monet(Comparing to [CycleGAN](https://github.com/junyanz/CycleGAN))
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/monet.png?raw=true)
-##### Monet(Comparing to [CycleGAN](https://github.com/junyanz/CycleGAN))
-![](https://github.com/citymonkeymao/neural-style/blob/gan/data/monet.png?raw=true)
+##### Vangogh(Comparing to [CycleGAN](https://github.com/junyanz/CycleGAN))
+![](https://github.com/citymonkeymao/neural-style/blob/gan/data/vangogh.png?raw=true)
 
 
 ##### Usage
