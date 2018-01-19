@@ -120,10 +120,13 @@ When using hundreds of pictures as style images, a discriminator could be used t
 #### Usage
 1. Download style image set(borrowed from CycleGAN):
   `bash ./datasets/download_dataset.sh <dataset name>`
-   <dataset name> could be monet2photo, vangogh2photo, ukiyoe2photo, cezanne2photo
+  
+   `<dataset name>` could be monet2photo, vangogh2photo, ukiyoe2photo, cezanne2photo
 2. Do style transfer
- ```th neural_style.lua -style_image `./list_images.sh <style_image_dir>` -content_<content_image>  -gan -content_weight 2 -style_weight 50000 -image_size 256 -backend cudnn -num_iterations 10000 -d_learning_rate 0.000001`
  ```
+ th neural_style.lua -style_image `./list_images.sh <style_image_dir>` -content_<content_image>  -gan -content_weight 2 -style_weight 50000 -image_size 256 -backend cudnn -num_iterations 10000 -d_learning_rate 0.000001`
+ ```
+ 
  `-gan`command specifies using Discriminator to calculate style loss. `d_learning_rate` is the learning rate for the Discriminator. `list_images.sh` helps to list all images in one directory, all files in that directory should not contain space and  `style_image_dir`should not contain`~`. You need to play with parameters for different style and size. 
 #### example
 Transfer fj.jpg to vangogh style
