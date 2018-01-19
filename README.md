@@ -108,11 +108,14 @@ The traditional way of calculating sytle loss:![](https://github.com/citymonkeym
 The new way of calculating style loss:
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/style-gan2.png?raw=true)
 
-#### Effect
-##### Imitate Shinkai Makoto Style
+#### Results
+##### Imitate Shinkai Makoto Style(Comparing to manual)
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/cmp_manual.png?raw=true)
 ##### Monet(Comparing to [CycleGAN](https://github.com/junyanz/CycleGAN))
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/monet.png?raw=true)
+##### Monet(Comparing to [CycleGAN](https://github.com/junyanz/CycleGAN))
+![](https://github.com/citymonkeymao/neural-style/blob/gan/data/monet.png?raw=true)
+
 
 ##### Usage
 1. Download style image set(borrowed from CycleGAN):
