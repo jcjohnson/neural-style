@@ -109,7 +109,8 @@ When using hundreds of pictures as style images, a discriminator could be used t
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/style-gan2.png?raw=true)
 
 #### Results
-##### Imitate Shinkai Makoto Style(Comparing to manual results)
+##### Imitate Shinkai Makoto Style
+Transfered with  ~160 high quality  style images.
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/cmp_manual.png?raw=true)
 ##### Imitate Monet(Comparing to [CycleGAN](https://github.com/junyanz/CycleGAN))
 ![](https://github.com/citymonkeymao/neural-style/blob/gan/data/monet.png?raw=true)
@@ -127,7 +128,7 @@ When using hundreds of pictures as style images, a discriminator could be used t
  th neural_style.lua -style_image `./list_images.sh <style_image_dir>` -content_<content_image>  -gan -content_weight 2 -style_weight 50000 -image_size 256 -backend cudnn -num_iterations 10000 -d_learning_rate 0.000001`
  ```
  
- `-gan`command specifies using Discriminator to calculate style loss. `d_learning_rate` is the learning rate for the Discriminator. `list_images.sh` helps to list all images in one directory, all files in that directory should not contain space and  `style_image_dir`should not contain`~`. You need to play with parameters for different style and size. 
+ `-gan`command specifies using Discriminators to calculate style losses. `d_learning_rate` is the learning rate for  Discriminators. `list_images.sh` helps to list all images in one directory, all files in that directory should not contain space and  `style_image_dir`should not contain`~`. You need to play with parameters for different style and size. 
 #### example
 Transfer fj.jpg to vangogh style
 1. Download vangogh's painting   `bash ./datasets/download_dataset.sh vangogh2photo`
