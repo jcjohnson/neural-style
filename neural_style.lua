@@ -233,6 +233,8 @@ local function main(params)
   elseif params.optimizer == 'adam' then
     optim_state = {
       learningRate = params.learning_rate,
+      beta1 = 0.99,
+      epsilon = 1e-1,
     }
   else
     error(string.format('Unrecognized optimizer "%s"', params.optimizer))
